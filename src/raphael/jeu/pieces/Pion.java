@@ -6,7 +6,7 @@ import java.util.List;
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
 import raphael.jeu.Piece;
-import raphael.jeu.Plateau;
+import raphael.jeu.Utilitaire;
 
 public class Pion extends Piece {
 	private List<Coup> coups;
@@ -52,7 +52,7 @@ public class Pion extends Piece {
 
 	private void listeCoupsPionBlanc() {
 
-		if(checkerCase(-10) && Plateau.indexToRow(getPosition()) == 6)
+		if(checkerCase(-10) && Utilitaire.indexToRow(getPosition()) == 6)
 			checkerCase(-20);
 
 		mangerDiagonale(-11);
@@ -61,7 +61,7 @@ public class Pion extends Piece {
 	
 	
 	private void listeCoupsPionNoir() {
-		if(checkerCase(10) && Plateau.indexToRow(getPosition()) == 1)
+		if(checkerCase(10) && Utilitaire.indexToRow(getPosition()) == 1)
 			checkerCase(20);
 
 		mangerDiagonale(11);

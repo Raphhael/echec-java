@@ -5,7 +5,7 @@ import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
 import raphael.jeu.Coup.TypeCoup;
 import raphael.jeu.Piece;
-import raphael.jeu.Plateau;
+import raphael.jeu.Utilitaire;
 
 public class Tour extends Piece {
 
@@ -29,7 +29,7 @@ public class Tour extends Piece {
 	public ArrayList<Coup> listeCoups(boolean allerProfond) {
 		ArrayList<Coup> liste = new ArrayList<Coup>(8);
 		Coup.TypeCoup type = aDejaBouge ? TypeCoup.NORMAL : 
-			(Plateau.indexToColumn(getPosition()) == 7 ? Coup.TypeCoup.PETIT_ROQUE_ANNULE
+			(Utilitaire.indexToColumn(getPosition()) == 7 ? Coup.TypeCoup.PETIT_ROQUE_ANNULE
 					: Coup.TypeCoup.GRAND_ROQUE_ANNULE);
 		
 		for (int deplacement : DEPLACEMENTS) {

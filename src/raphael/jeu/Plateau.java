@@ -44,8 +44,11 @@ public class Plateau {
 	
 	/*
 	 * Équivalent au clone() mais plus souple
+	 * 
+	 * On passe aussi l'information sur est ce que le roi a bougé, grâce à 
+	 * quoi on peut éviter aussi de recalculer sa position.
 	 */
-	public Plateau(Plateau plateau, boolean majRoiBlanc, boolean majRoiNoir) {
+	public Plateau(Plateau plateau, boolean needMajRoiBlanc, boolean needMajRoiNoir) {
 		Piece []copie = new Piece[plateau.getCases().length];
 		for (int i = 0; i < copie.length; i++) {
 			if (plateau.getCase(i) != null) {
@@ -53,13 +56,12 @@ public class Plateau {
 				copie[i].setPlateau(this);
 			}
 		}
-		this.listeCoupsBlancs = null;
-		this.listeCoupsNoirs = null;
+		if(!needMajRoiBlanc)
+			this.positionRoiBlanc = plateau.getPositionRoiBlanc();
+		if(!needMajRoiNoir)
+			this.positionRoiNoir = plateau.getPositionRoiNoir();
+		
 		this.cases = copie;
-		if(!majRoiBlanc)
-			positionRoiBlanc = plateau.getPositionRoi(CouleurPiece.BLANC);
-		if(!majRoiNoir)
-			positionRoiNoir = plateau.getPositionRoi(CouleurPiece.NOIR);
 	}
 	
 	
@@ -102,7 +104,6 @@ public class Plateau {
 					if(goDeep) {
 						// Si le flag est activé, on fais une simulation du coup :
 						// On joue, et si on voit que ça marche on ajoute le coup
-						// TROP COUTEUX...
 						if(coup.jouer(getEtat()) != getEtat())
 							coups.add(coup);
 					}
@@ -135,30 +136,6 @@ public class Plateau {
 	}
 	
 	/**
-	 * Ligne d'une pièce dont on connait la position dans un tableau
-	 * à une seule dimension.
-	 * 
-	 * @param 	i la position dans un tableau unidimentionnel.
-	 * @return	la ligne
-	 */
-	public static int indexToRow(int i) {
-		return (int)(i / 8);
-	}
-	
-	/**
-	 * Ligne d'une pièce dont on connait la position dans un tableau
-	 * à une seule dimension.
-	 * 
-	 * @param 	i la position dans un tableau unidimentionnel.
-	 * @return	la ligne
-	 */
-	public static int indexToColumn(int i) {
-		return i - 8 * (int)(i / 8);
-	}
-
-
-	
-	/**
 	 * Est-ce que cette case est attaquée par une couleur ?
 	 * 
 	 * @param indiceCase	indice de la case
@@ -184,8 +161,9 @@ public class Plateau {
 
 	/**
 	 * Retrouver où est le roi ?
-	 * On utilise la variable positionRoi[couleur] si elle est différente de
-	 * -1 pour ne pas tout recalculer.
+	 * 
+	 * On utilise la variable positionRoi[couleur] pour ne pas à recalculer
+	 * à chaque fois la valeur.
 	 * 
 	 * @param	couleur	Couleur du roi à trouver
 	 * @return			La position [0; 64[
@@ -193,20 +171,29 @@ public class Plateau {
 	public int getPositionRoi(CouleurPiece couleur) {
 		if(couleur == CouleurPiece.BLANC && positionRoiBlanc != -1)
 			return positionRoiBlanc;
-		if(couleur == CouleurPiece.NOIR && positionRoiNoir != -1)
-			return positionRoiNoir;
-		
+		else if(couleur == CouleurPiece.NOIR && positionRoiNoir != -1)
+			return positionRoiNoir;;
 		
 		for (int i = 0; i < cases.length; i++) {
 			if(cases[i] != null && cases[i].getCouleur() == couleur
-					&& cases[i] instanceof Roi)
+												&& cases[i] instanceof Roi) {
+
+				if(couleur == CouleurPiece.BLANC)
+					positionRoiBlanc = i;
+				else
+					positionRoiNoir = i;
 				return i;
+			}
 		}
-		return -2;
+		
+		return -1;
 	}
 	
 	/****** Getters and setters *******/
 
+	public int getPositionRoiNoir() {  return positionRoiNoir; }
+	public int getPositionRoiBlanc() { return positionRoiBlanc; }
+	
 	public Etat getEtat() { return etat; }
 	public void setEtat(Etat etat) { this.etat = etat; }
 	
@@ -220,7 +207,6 @@ public class Plateau {
 		cases[i] = null;
 	}
 
-	
 	
 	/**************************** DÉBUG **************************************/
 	@Override

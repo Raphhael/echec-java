@@ -31,6 +31,9 @@ public class Etat implements Noeud {
 	private Coup 	coupPrecedent;
 	private Etat	etatPrecedent;
 	
+	public static int calcul1 = 0;
+	public static int calcul2 = 0;
+	
 	/****************** Constructeurs *****************/
 	
 	/**
@@ -57,17 +60,14 @@ public class Etat implements Noeud {
 	 * @param coup	Le coup qui a mené ici
 	 */
 	public Etat(Etat etat, Coup coup) {
-		this(new Plateau(
-					etat.getPlateau(),
-/* Le roi B ou */	etat.getTrait() == CouleurPiece.BLANC && coup.is(TypeCoup.NORMAL),
-/* N à bougé ? */	etat.getTrait() == CouleurPiece.NOIR && coup.is(TypeCoup.NORMAL)
-			),etat.getTrait());
-		
+		this(new Plateau(etat.getPlateau(), 
+				etat.getTrait() == CouleurPiece.BLANC && !coup.is(TypeCoup.NORMAL),
+				etat.getTrait() == CouleurPiece.NOIR && !coup.is(TypeCoup.NORMAL)
+			), etat.getTrait());
 		this.petitRoqueBlanc = etat.isPetitRoqueBlanc();
 		this.petitRoqueNoir  = etat.isPetitRoqueNoir();
 		this.grandRoqueBlanc = etat.isGrandRoqueBlanc();
 		this.grandRoqueNoir  = etat.isGrandRoqueNoir();
-		
 		this.coupPrecedent = coup;
 		this.etatPrecedent = etat;
 	}
@@ -104,6 +104,7 @@ public class Etat implements Noeud {
 		} while (ancien.coupPrecedent != null);
 		return liste;
 	}
+
 	
 	/**
 	 * Nombre de coup depuis le début de partie.
@@ -138,7 +139,7 @@ public class Etat implements Noeud {
 	public void 	annulerGrandRoqueBlanc() {	grandRoqueBlanc = false; }
 	public void 	annulerGrandRoqueNoir()  {	grandRoqueNoir  = false; }
 
-	
+
 	
 	/****** Implémentation des méthodes de Noeud *******/
 
@@ -197,9 +198,9 @@ public class Etat implements Noeud {
 		if(avancement < 15) {
 			//cases du centre : 27, 28, 35, 36
 			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
+			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(28, maCouleur) - plateau.nbDAttaques(28, maCouleur.oppose()));
+			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(35, maCouleur) - plateau.nbDAttaques(35, maCouleur.oppose()));
+			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(36, maCouleur) - plateau.nbDAttaques(36, maCouleur.oppose()));
 		}
 		
 		/*** Importance du roque en début de game [-60; 100]***/
@@ -225,12 +226,14 @@ public class Etat implements Noeud {
 		if(avancement < 16) {
 			boolean dameBlanche = plateau.getCase(59) instanceof Dame && plateau.getCase(59).getCouleur() == CouleurPiece.BLANC;
 			boolean dameNoire = plateau.getCase(3) instanceof Dame && plateau.getCase(3).getCouleur() == CouleurPiece.NOIR;
-			if(maCouleur == CouleurPiece.NOIR)
-				total += (dameNoire ? 1 : -1) * Constantes.COEF_FORCER_DAME + 
-						 (dameBlanche ? -1 : 1) * Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER;
-			else
-				total += (dameBlanche ? 1 : -1) * Constantes.COEF_FORCER_DAME + 
-						 (dameNoire ? -1 : 1) * Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER;
+			if(maCouleur == CouleurPiece.NOIR) {
+				total += Constantes.COEF_FORCER_DAME * (dameNoire ? 1 : -1);
+				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameBlanche ? -1 : 1);
+			}
+			else {
+				total += Constantes.COEF_FORCER_DAME * (dameBlanche ? 1 : -1);
+				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameNoire ? -1 : 1);
+			}
 		}
 		
 		
@@ -240,8 +243,6 @@ public class Etat implements Noeud {
 		
 		return total;
 	}
-	
-	
 
 	
 	@Override

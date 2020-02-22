@@ -74,7 +74,8 @@ public abstract class Piece implements Cloneable {
 	public Plateau 		getPlateau() { return plateau; }
 	public void    		setPlateau(Plateau plateau) { this.plateau = plateau; }
 	
-	
+	public int  		getColonne() { return position - 8 * (int)(position / 8); }
+
 	@Override
 	public String toString() {
 		return 	String.valueOf(getClass().getSimpleName()) + 

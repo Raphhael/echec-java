@@ -70,6 +70,10 @@ public class Board extends GridPane {
 		System.out.println("CompteurFrom = " + ListeDeCoups.compteurFrom);
 		System.out.println("CompteurTo = " + ListeDeCoups.compteurTo);
 		
+
+//		System.out.println("Calcul1 = " + Etat.calcul1);
+//		System.out.println("Calcul2 = " + Etat.calcul2);
+		
 		return ((double)(t2 - t1)) / 1000.;
 	}
 
