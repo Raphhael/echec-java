@@ -21,9 +21,11 @@ public class ListeDeCoups extends ArrayList<Coup> implements List<Coup> {
 	public ListeDeCoups chercherCoupsFrom(int indice) {
 		ListeDeCoups selection = new ListeDeCoups();
 		compteurFrom++;
-		for (Coup coup : this)
+		for (int i = 0; i < size(); i++) {
+			Coup coup = get(i);
 			if(coup.getFrom() == indice)
 				selection.add(coup);
+		}
 		
 		return selection;
 	}
@@ -48,9 +50,11 @@ public class ListeDeCoups extends ArrayList<Coup> implements List<Coup> {
 		}
 		
 		selection = new ListeDeCoups();
-		for (Coup coup : this)
+		for (int i = 0; i < size(); i++) {
+			Coup coup = get(i);
 			if(coup.getTo() == indice)
 				selection.add(coup);
+		}
 		
 		dejaCalcule[indice] = selection;
 		return selection;

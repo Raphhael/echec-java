@@ -115,7 +115,7 @@ public class Etat implements Noeud {
 	public int getNumeroDeCoup() {
 		Etat ancien = etatPrecedent;
 		int num = 0;
-		for(; ancien!= null; num++)
+		for(; ancien != null; num++)
 			ancien = ancien.etatPrecedent;
 		return num;
 	}
@@ -146,8 +146,10 @@ public class Etat implements Noeud {
 	@Override
 	public List<Noeud> successeurs() {
 		List<Noeud> succ = new ArrayList<Noeud>();
-		for (Coup coup : plateau.calculerCoups(trait, true)) {
-			Etat e = coup.jouer(this);
+		ListeDeCoups liste = plateau.calculerCoups(trait, true);
+		
+		for (int i = 0, max = liste.size(); i < max; i++) {
+			Etat e = liste.get(i).jouer(this);
 			if(e != this)
 				succ.add(e);
 		}
@@ -164,7 +166,8 @@ public class Etat implements Noeud {
 		int total = 0;
 		
 		/**** Avantage des pièces ********/
-		for (Piece piece : plateau.getCases()) {
+		for (int i = 0; i < plateau.getCases().length; i++) {
+			Piece piece = plateau.getCase(i);
 			if(piece == null)
 				continue;
 			if(piece.getCouleur() == joueur)
@@ -186,7 +189,8 @@ public class Etat implements Noeud {
 		
 		/**** Avancer en début de game [2; 15]********/
 		if(avancement < 15) {
-			for (Coup coup : coupsPerso) {
+			for (int i = 0; i < coupsPerso.size(); i++) {
+				Coup coup = coupsPerso.get(i);
 				if(maCouleur == CouleurPiece.BLANC && coup.getFrom() > coup.getTo()) 
 					total += plateau.getCase(coup.getFrom()).getValue() * Constantes.COEF_AVANCEMENT_PIECES;
 				if(maCouleur == CouleurPiece.NOIR && coup.getFrom() < coup.getTo()) 
@@ -206,9 +210,10 @@ public class Etat implements Noeud {
 		/*** Importance du roque en début de game [-60; 100]***/
 		if(avancement < 20) {
 			byte finiRoque = 0x00;
-			for (Coup coup : coupsPrecedents()) {
-				if(coup == null)
-					continue;
+			List<Coup> coupsPrecedents = coupsPrecedents();
+			
+			for (int i = 0; i < coupsPrecedents.size() && finiRoque < 0x02; i++) {
+				Coup coup = coupsPrecedents.get(i);
 				if(coup.is(TypeCoup.ROQUE_PETIT_BLANC) || coup.is(TypeCoup.ROQUE_GRAND_BLANC)) {
 					total += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.BLANC ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
 					finiRoque ++;
@@ -217,8 +222,6 @@ public class Etat implements Noeud {
 					total += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.NOIR ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
 					finiRoque ++;
 				}
-				if(finiRoque >= 0x02)
-					break;
 			}
 		}
 		

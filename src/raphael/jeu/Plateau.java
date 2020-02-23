@@ -1,5 +1,7 @@
 package raphael.jeu;
 
+import java.util.List;
+
 import raphael.jeu.pieces.Roi;
 
 /**
@@ -94,21 +96,25 @@ public class Plateau {
 		
 		ListeDeCoups coups  = new ListeDeCoups();
 		
-		for (int i = 0; i < getCases().length; i++) {
-			Piece p = getCase(i);
+		for (int i = 0; i < cases.length; i++) {
+			Piece p = cases[i];
 			if(p == null) 
 				continue;
 			
 			if(p.getCouleur() == couleur) {
-				for (Coup coup : p.listeCoups(goDeep)) {
-					if(goDeep) {
-						// Si le flag est activé, on fais une simulation du coup :
-						// On joue, et si on voit que ça marche on ajoute le coup
-						if(coup.jouer(getEtat()) != getEtat())
+				List<Coup> listePiece = p.listeCoups(goDeep);
+				
+				if(!goDeep) {
+					coups.addAll(listePiece);
+				}
+				else {
+					// Si le flag est activé, on fait une simulation du coup :
+					// On joue, et si on voit que ça marche on ajoute le coup
+					for (int j = 0, max = listePiece.size(); j < max; j++) {
+						Coup coup = listePiece.get(j);
+						if(coup.isValid(etat))
 							coups.add(coup);
 					}
-					else
-						coups.add(coup);
 				}
 			}
 		}
@@ -193,6 +199,21 @@ public class Plateau {
 
 	public int getPositionRoiNoir() {  return positionRoiNoir; }
 	public int getPositionRoiBlanc() { return positionRoiBlanc; }
+
+	public ListeDeCoups getListeDeCoupNoirs(boolean deep) {
+		return deep ? listeCoupsNoirs : listeCoupsNoirsNoDeep;
+	}
+	public ListeDeCoups getListeDeCoupBlancs(boolean deep) {
+		return deep ? listeCoupsBlancs : listeCoupsBlancsNoDeep;
+	}
+	public void setListeDeCoupNoirs(ListeDeCoups liste, boolean deep) {
+		if(deep)	listeCoupsNoirs = liste;
+		else		listeCoupsNoirsNoDeep = liste;
+	}
+	public void setListeDeCoupBlancs(ListeDeCoups liste, boolean deep) {
+		if(deep)	listeCoupsBlancs = liste;
+		else		listeCoupsBlancsNoDeep = liste;
+	}
 	
 	public Etat getEtat() { return etat; }
 	public void setEtat(Etat etat) { this.etat = etat; }

@@ -1,6 +1,5 @@
 package raphael.jeu;
 
-
 /**
  * Un coup est défini par
  * <ul> <li>Position de départ (from)</li>
@@ -46,25 +45,33 @@ public class Coup {
 	}
 	/*
 	 * Essai d'une méthode jouer plus légère que jouer pour vérifier 
-	 * si un coup est valide ... mais n'est pas plus léger finalement
-	 * 
+	 * si un coup est valide ...
+	 */
 	public boolean isValid(Etat etat) {
-		Plateau temp = new Plateau(etat.getPlateau());
+		if(typeCoup != TypeCoup.NORMAL)
+			return jouer(etat) != etat;
 		
-		Piece sauvFrom = temp.getCase(from);
-		Piece sauvTo = temp.getCase(to);
-		if(sauvFrom instanceof Roi)
-			return temp.estAttaquee(to, sauvFrom.getCouleur().oppose());
+		Plateau plateau = etat.getPlateau();
 		
-		temp.removeCase(from);
-		temp.setCase(to, sauvFrom);
-		boolean res = temp.enEchec(sauvFrom.getCouleur()) ? false : true;
-		temp.setCase(from, sauvFrom);
-		if(sauvTo != null)
-			temp.setCase(to, sauvTo);
+		Piece sauvFrom = plateau.getCase(from);
+		Piece sauvTo = plateau.getCase(to);
+		ListeDeCoups sauvCoups = plateau.getListeDeCoupBlancs(false);
+		plateau.setListeDeCoupBlancs(null, false);
+		
+		plateau.removeCase(from);
+		plateau.setCase(to, sauvFrom);
+		
+		
+		boolean res = plateau.enEchec(sauvFrom.getCouleur()) ? false : true;
+		
+		plateau.setListeDeCoupBlancs(sauvCoups, false);
+		plateau.setCase(from, sauvFrom);
+		
+		if(sauvTo != null)	plateau.setCase(to, sauvTo);
+		else				plateau.getCases()[to] = sauvTo;
 		
 		return res;
-	}*/
+	}
 	
 	/**
 	 * Applique le coup sur un état courant
