@@ -86,11 +86,11 @@ public class Plateau {
 	 */
 	public ListeDeCoups calculerCoups(CouleurPiece couleur, boolean goDeep) {
 		if(couleur == CouleurPiece.BLANC) {
-			if(goDeep && listeCoupsBlancs != null) {return listeCoupsBlancs;}
-			else if(!goDeep && listeCoupsBlancsNoDeep != null) { compteur2++; return listeCoupsBlancsNoDeep;}
+			if(listeCoupsBlancs != null) return listeCoupsBlancs;
+			else if(!goDeep && listeCoupsBlancsNoDeep != null) return listeCoupsBlancsNoDeep;
 		}
 		else {
-			if(goDeep && listeCoupsNoirs != null) return listeCoupsNoirs;
+			if(listeCoupsNoirs != null) return listeCoupsNoirs;
 			else if(!goDeep && listeCoupsNoirsNoDeep != null) return listeCoupsNoirsNoDeep;
 		}
 		
