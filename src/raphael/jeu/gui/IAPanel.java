@@ -33,11 +33,13 @@ public class IAPanel extends FlowPane{
 		profondeurLabel = new Label();
 		Button plus = new Button("+");
 		Button moins = new Button("-");
+		Button precedent = new Button("Précédent");
 		plus .setOnAction((ActionEvent event) -> { setProfondeur(++profondeur); });
 		moins.setOnAction((ActionEvent event) -> { setProfondeur(--profondeur); });
+		precedent.setOnAction((ActionEvent event) -> { board.precedent(); });
 		setProfondeur(3);
 				
-		getChildren().addAll(new ChoixGroupe(), profondeurLabel,
+		getChildren().addAll(precedent, new ChoixGroupe(), profondeurLabel,
 							 moins, plus, autoPlay, tempsExecution);
 
 	}

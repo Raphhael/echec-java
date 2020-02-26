@@ -56,6 +56,14 @@ public class Board extends GridPane {
 		}
 	}
 	
+	public void precedent() {
+		Etat precendent = etat.getEtatPrecedent();
+		if(precendent != null) {
+			etat = precendent;
+			syncEtat();
+		}
+	}
+	
 	/**
 	 * Demander à l'IA de jouer
 	 */
@@ -127,12 +135,14 @@ public class Board extends GridPane {
 			cleanSelection();
 			for (Coup coup : listeCoupsSelection) {
 				if(coup.getTo() == indexPieceSelectionnee) {
+					
 					etat = coup.jouer(etat);
 					syncEtat();
 					pieceSelectionnee = false;
 					if(etat.echecEtMat()) {
 						System.out.println("FINI !");
 					}
+					System.out.println("HashCode = " + etat.getPlateau().getZobristHash());
 //					autoPlay();
 					// System.out.println("ETAT : " + etat.evaluation());
 				}

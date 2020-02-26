@@ -129,6 +129,7 @@ public class Etat implements Noeud {
 	public Plateau 		getPlateau() { return plateau; }
 
 	public Coup 		getCoupPrecedent() { return coupPrecedent; }
+	public Etat 		getEtatPrecedent() { return etatPrecedent; }
 
 	public boolean 	isPetitRoqueBlanc() {	return petitRoqueBlanc; }
 	public boolean 	isPetitRoqueNoir()  {	return petitRoqueNoir; }

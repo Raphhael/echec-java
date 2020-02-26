@@ -51,6 +51,11 @@ public class Fou extends Piece {
 	protected int getValue() {
 		return 330;
 	}
+
+	@Override
+	protected byte getZobriestValue() {
+		return 0x06;
+	}
 	
 	@Override
 	protected Fou makeCopy() {

@@ -56,6 +56,11 @@ public class Tour extends Piece {
 	protected int getValue() {
 		return 500;
 	}
+
+	@Override
+	protected byte getZobriestValue() {
+		return 0x00;
+	}
 	
 	@Override
 	protected Tour makeCopy() {

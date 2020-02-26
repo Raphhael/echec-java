@@ -39,6 +39,11 @@ public abstract class Piece implements Cloneable {
 	 * @return	La valeur stratégique de la piece
 	 */
 	protected abstract int getValue();
+	protected abstract byte getZobriestValue();
+	public byte zobriestValue() {
+		return (byte) ((couleur == CouleurPiece.NOIR ? 0x01 : 0x00)
+			           | getZobriestValue());
+	}
 	
 	/**
 	 * Calcule la liste des coups possibles de la piece sur le plateau.

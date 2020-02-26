@@ -46,4 +46,9 @@ public class Cavalier extends Piece {
 	protected int getValue() {
 		return 320;
 	}
+
+	@Override
+	protected byte getZobriestValue() {
+		return 0x0A;
+	}
 }

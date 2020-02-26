@@ -1,6 +1,7 @@
 package raphael.jeu;
 
 import java.util.List;
+import java.util.Random;
 
 import raphael.jeu.pieces.Roi;
 
@@ -23,6 +24,9 @@ public class Plateau {
 	
 	public static int compteur1 = 0;
 	public static int compteur2 = 0;
+	
+	private long zobristTable[][];
+	private long zobristHash;
 
 	
 	/******************** Constructeurs *********************/
@@ -36,12 +40,21 @@ public class Plateau {
 	 */
 	public Plateau() {
 		this(Constantes.PLATEAU_DEFAUT);
+		Random random = new Random();
+		zobristTable = new long[64][12];
+		zobristHash = 0;
 		
-		for (int i = 0; i < cases.length; i++)
+		for (int i = 0; i < cases.length; i++) {
+			for(int k = 0; k < 12; k++)
+				zobristTable[i][k] = random.nextLong();
+			
 			if(cases[i] != null) {
 				cases[i].setPosition(i);
 				cases[i].setPlateau(this);
+				zobristHash ^= zobristTable[i][cases[i].zobriestValue()]; 
 			}
+		}
+		System.out.println("Code = " + zobristHash);
 	}
 	
 	/*
@@ -51,19 +64,21 @@ public class Plateau {
 	 * quoi on peut éviter aussi de recalculer sa position.
 	 */
 	public Plateau(Plateau plateau, boolean needMajRoiBlanc, boolean needMajRoiNoir) {
-		Piece []copie = new Piece[plateau.getCases().length];
+		Piece []copie = new Piece[plateau.cases.length];
 		for (int i = 0; i < copie.length; i++) {
-			if (plateau.getCase(i) != null) {
-				copie[i] = (Piece) plateau.getCase(i).makeCopy();
+			if (plateau.cases[i] != null) {
+				copie[i] = (Piece) plateau.cases[i].makeCopy();
 				copie[i].setPlateau(this);
 			}
 		}
 		if(!needMajRoiBlanc)
-			this.positionRoiBlanc = plateau.getPositionRoiBlanc();
+			this.positionRoiBlanc = plateau.positionRoiBlanc;
 		if(!needMajRoiNoir)
-			this.positionRoiNoir = plateau.getPositionRoiNoir();
+			this.positionRoiNoir = plateau.positionRoiNoir;
 		
 		this.cases = copie;
+		this.zobristHash = plateau.zobristHash;
+		this.zobristTable = plateau.zobristTable;
 	}
 	
 	
@@ -195,10 +210,23 @@ public class Plateau {
 		return -1;
 	}
 	
+	/**
+	 * Met à jour la table de zobrist en fonction de l'état d'une case.
+	 * La case ne doit pas être vide !
+	 * 
+	 * @param caseIdx	L'indice de la case
+	 */
+	private void zobristXOR(int caseIdx) {
+		zobristHash ^= zobristTable[caseIdx][cases[caseIdx].zobriestValue()];
+	}
+	
 	/****** Getters and setters *******/
 
 	public int getPositionRoiNoir() {  return positionRoiNoir; }
 	public int getPositionRoiBlanc() { return positionRoiBlanc; }
+
+	public long getZobristHash() {   return zobristHash; }
+	public void setZobristHash(long hash) { zobristHash = hash;	}
 
 	public ListeDeCoups getListeDeCoupNoirs(boolean deep) {
 		return deep ? listeCoupsNoirs : listeCoupsNoirsNoDeep;
@@ -215,16 +243,40 @@ public class Plateau {
 		else		listeCoupsBlancsNoDeep = liste;
 	}
 	
-	public Etat getEtat() { return etat; }
+	public Etat getEtat() {	return etat; }
 	public void setEtat(Etat etat) { this.etat = etat; }
 	
-	public Piece[] getCases() { return cases; }
+	public Piece[] getCases() {		return cases; }
 	public Piece   getCase(int i) { return cases[i]; }
+	
+	/**
+	 * Place une piece à une certaine position
+	 * 
+	 * Si il existe déjà une piece à la position d'arrivée, on appelle 
+	 * removeCase en cette cases afin de la préparer.
+	 * 
+	 * Toutes les mises à jour pour le hachage sont effectuées.
+	 * La mise à jour de la position de la pièce est également effectuée.
+	 * 
+	 * @param i		La case de destination
+	 * @param piece La piece à bouger
+	 */
 	public void    setCase(int i, Piece piece) {
+		removeCase(i);
 		cases[i] = piece;
+		zobristXOR(i);
 		piece.setPosition(i);
 	}
+	
+	/**
+	 * Supprimer la piece d'une case en effectuant la mise à jour
+	 * du hash.
+	 * 
+	 * @param i		l'indice de la case à "vider"
+	 */
 	public void removeCase(int i) {
+		if(cases[i] != null)
+			zobristXOR(i);
 		cases[i] = null;
 	}
 

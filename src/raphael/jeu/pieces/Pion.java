@@ -72,6 +72,11 @@ public class Pion extends Piece {
 	protected int getValue() {
 		return 100;
 	}
+
+	@Override
+	protected byte getZobriestValue() {
+		return 0x04;
+	}
 	
 	@Override
 	protected Pion makeCopy() {

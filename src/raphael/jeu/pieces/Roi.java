@@ -97,6 +97,11 @@ public class Roi extends Piece {
 	protected int getValue() {
 		return 20000;
 	}
+
+	@Override
+	protected byte getZobriestValue() {
+		return 0x02;
+	}
 	
 	@Override
 	protected Roi makeCopy() {

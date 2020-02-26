@@ -53,6 +53,12 @@ public class Dame extends Piece {
 	protected int getValue() {
 		return 900;
 	}
+
+	@Override
+	protected byte getZobriestValue() {
+		return 0x08;
+	}
+	
 	@Override
 	protected Dame makeCopy() {
 		return new Dame(this);

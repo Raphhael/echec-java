@@ -68,7 +68,7 @@ public class Coup {
 		plateau.setCase(from, sauvFrom);
 		
 		if(sauvTo != null)	plateau.setCase(to, sauvTo);
-		else				plateau.getCases()[to] = sauvTo;
+		else				plateau.removeCase(to);
 		
 		return res;
 	}
@@ -86,6 +86,7 @@ public class Coup {
 	 */
 	public Etat jouer(Etat etatCourant) {
 		Etat nouvelEtat = new Etat(etatCourant, this);
+		
 		switch (typeCoup) {
 			case GRAND_ROQUE_ANNULE:
 				if(nouvelEtat.getTrait() == CouleurPiece.BLANC)
