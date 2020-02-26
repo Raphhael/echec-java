@@ -30,6 +30,9 @@ public class Etat implements Noeud {
 	
 	private Coup 	coupPrecedent;
 	private Etat	etatPrecedent;
+
+	private boolean	evaluationCalculee;	/* Si deja calculée, on la stocke	*/
+	private int		evaluationValue;	/* afin de ne pas la recalculer		*/
 	
 	public static int calcul1 = 0;
 	public static int calcul2 = 0;
@@ -164,7 +167,11 @@ public class Etat implements Noeud {
 
 	@Override
 	public int evaluation(Joueur joueur) {
-		int total = 0;
+		
+		if(evaluationCalculee)
+			return evaluationValue;
+		else
+			evaluationCalculee = true;
 		
 		/**** Avantage des pièces ********/
 		for (int i = 0; i < plateau.getCases().length; i++) {
@@ -172,9 +179,9 @@ public class Etat implements Noeud {
 			if(piece == null)
 				continue;
 			if(piece.getCouleur() == joueur)
-				total += piece.getValue();
+				evaluationValue += piece.getValue();
 			else
-				total -= piece.getValue();
+				evaluationValue -= piece.getValue();
 		}
 		
 		/* Initialisation des vars */
@@ -185,7 +192,7 @@ public class Etat implements Noeud {
 		
 		
 		/**** Avantage lorsqu'on a plus de choix de coups [-15; 15]********/
-		total = coupsPerso.size() - coupsAdv.size();
+		evaluationValue = coupsPerso.size() - coupsAdv.size();
 		
 		
 		/**** Avancer en début de game [2; 15]********/
@@ -193,19 +200,19 @@ public class Etat implements Noeud {
 			for (int i = 0; i < coupsPerso.size(); i++) {
 				Coup coup = coupsPerso.get(i);
 				if(maCouleur == CouleurPiece.BLANC && coup.getFrom() > coup.getTo()) 
-					total += plateau.getCase(coup.getFrom()).getValue() * Constantes.COEF_AVANCEMENT_PIECES;
+					evaluationValue += plateau.getCase(coup.getFrom()).getValue() * Constantes.COEF_AVANCEMENT_PIECES;
 				if(maCouleur == CouleurPiece.NOIR && coup.getFrom() < coup.getTo()) 
-					total += plateau.getCase(coup.getFrom()).getValue() * Constantes.COEF_AVANCEMENT_PIECES;
+					evaluationValue += plateau.getCase(coup.getFrom()).getValue() * Constantes.COEF_AVANCEMENT_PIECES;
 			}
 		}
 		
 		/*** Controle du centre si début de game [+-100] ***/
 		if(avancement < 15) {
 			//cases du centre : 27, 28, 35, 36
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(28, maCouleur) - plateau.nbDAttaques(28, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(35, maCouleur) - plateau.nbDAttaques(35, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(36, maCouleur) - plateau.nbDAttaques(36, maCouleur.oppose()));
+			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
+			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(28, maCouleur) - plateau.nbDAttaques(28, maCouleur.oppose()));
+			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(35, maCouleur) - plateau.nbDAttaques(35, maCouleur.oppose()));
+			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(36, maCouleur) - plateau.nbDAttaques(36, maCouleur.oppose()));
 		}
 		
 		/*** Importance du roque en début de game [-60; 100]***/
@@ -216,11 +223,11 @@ public class Etat implements Noeud {
 			for (int i = 0; i < coupsPrecedents.size() && finiRoque < 0x02; i++) {
 				Coup coup = coupsPrecedents.get(i);
 				if(coup.is(TypeCoup.ROQUE_PETIT_BLANC) || coup.is(TypeCoup.ROQUE_GRAND_BLANC)) {
-					total += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.BLANC ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
+					evaluationValue += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.BLANC ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
 					finiRoque ++;
 				}
 				if(coup.is(TypeCoup.ROQUE_PETIT_NOIR) || coup.is(TypeCoup.ROQUE_GRAND_NOIR)) {
-					total += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.NOIR ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
+					evaluationValue += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.NOIR ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
 					finiRoque ++;
 				}
 			}
@@ -231,12 +238,12 @@ public class Etat implements Noeud {
 			boolean dameBlanche = plateau.getCase(59) instanceof Dame && plateau.getCase(59).getCouleur() == CouleurPiece.BLANC;
 			boolean dameNoire = plateau.getCase(3) instanceof Dame && plateau.getCase(3).getCouleur() == CouleurPiece.NOIR;
 			if(maCouleur == CouleurPiece.NOIR) {
-				total += Constantes.COEF_FORCER_DAME * (dameNoire ? 1 : -1);
-				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameBlanche ? -1 : 1);
+				evaluationValue += Constantes.COEF_FORCER_DAME * (dameNoire ? 1 : -1);
+				evaluationValue += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameBlanche ? -1 : 1);
 			}
 			else {
-				total += Constantes.COEF_FORCER_DAME * (dameBlanche ? 1 : -1);
-				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameNoire ? -1 : 1);
+				evaluationValue += Constantes.COEF_FORCER_DAME * (dameBlanche ? 1 : -1);
+				evaluationValue += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameNoire ? -1 : 1);
 			}
 		}
 		
@@ -245,7 +252,7 @@ public class Etat implements Noeud {
 		// TODO : fous devant pions centraux
 		
 		
-		return total;
+		return evaluationValue;
 	}
 
 	
