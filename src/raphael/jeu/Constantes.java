@@ -1,5 +1,7 @@
 package raphael.jeu;
 
+import java.util.Random;
+
 import raphael.jeu.pieces.Cavalier;
 import raphael.jeu.pieces.Dame;
 import raphael.jeu.pieces.Fou;
@@ -26,7 +28,8 @@ public interface Constantes {
 	int		COEF_FORCER_DAME = 150;
 	int		COEF_FORCER_DAME_ENNEMIE_A_BOUGER = 100;
 	
-	
+
+	public static final Random GENERATOR = new Random();
 	
 	int [] TAB120 = {
 	    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,

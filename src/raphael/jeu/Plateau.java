@@ -1,7 +1,6 @@
 package raphael.jeu;
 
 import java.util.List;
-import java.util.Random;
 
 import raphael.jeu.pieces.Roi;
 
@@ -40,13 +39,12 @@ public class Plateau {
 	 */
 	public Plateau() {
 		this(Constantes.PLATEAU_DEFAUT);
-		Random random = new Random();
 		zobristTable = new long[64][12];
 		zobristHash = 0;
 		
 		for (int i = 0; i < cases.length; i++) {
 			for(int k = 0; k < 12; k++)
-				zobristTable[i][k] = random.nextLong();
+				zobristTable[i][k] = Constantes.GENERATOR.nextLong();
 			
 			if(cases[i] != null) {
 				cases[i].setPosition(i);
@@ -218,6 +216,9 @@ public class Plateau {
 	 */
 	private void zobristXOR(int caseIdx) {
 		zobristHash ^= zobristTable[caseIdx][cases[caseIdx].zobriestValue()];
+	}
+	public void zobristXOR(long value) {
+		zobristHash ^= value;
 	}
 	
 	/****** Getters and setters *******/

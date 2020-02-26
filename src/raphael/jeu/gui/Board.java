@@ -142,7 +142,7 @@ public class Board extends GridPane {
 					if(etat.echecEtMat()) {
 						System.out.println("FINI !");
 					}
-					System.out.println("HashCode = " + etat.getPlateau().getZobristHash());
+					System.out.println("HashCode = " + etat.hash());
 //					autoPlay();
 					// System.out.println("ETAT : " + etat.evaluation());
 				}

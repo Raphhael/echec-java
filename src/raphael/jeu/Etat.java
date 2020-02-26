@@ -20,6 +20,13 @@ import raphael.jeu.pieces.Dame;
  *
  */
 public class Etat implements Noeud {
+	
+	private static final long TRAIT = Constantes.GENERATOR.nextLong();
+	private static final long PRB = Constantes.GENERATOR.nextLong();
+	private static final long PRN = Constantes.GENERATOR.nextLong();
+	private static final long GRB = Constantes.GENERATOR.nextLong();
+	private static final long GRN = Constantes.GENERATOR.nextLong();
+	
 	private CouleurPiece trait;			/* A qui de jouer */
 	private Plateau plateau;
 	
@@ -44,6 +51,11 @@ public class Etat implements Noeud {
 	 */
 	public Etat() {
 		this(new Plateau(), Constantes.COULEUR_DEFAUT);
+		plateau.zobristXOR(GRB);
+		plateau.zobristXOR(GRN);
+		plateau.zobristXOR(PRB);
+		plateau.zobristXOR(PRN);
+		plateau.zobristXOR(TRAIT);
 		this.petitRoqueBlanc = true;
 		this.petitRoqueNoir  = true;
 		this.grandRoqueBlanc = true;
@@ -127,7 +139,7 @@ public class Etat implements Noeud {
 	/***** Getter / Setter *****/
 	
 	public CouleurPiece getTrait() { return trait; }
-	public CouleurPiece changerTrait() { return trait = trait.oppose(); }
+	public CouleurPiece changerTrait() { plateau.zobristXOR(TRAIT); return trait = trait.oppose(); }
 	
 	public Plateau 		getPlateau() { return plateau; }
 
@@ -138,10 +150,10 @@ public class Etat implements Noeud {
 	public boolean 	isPetitRoqueNoir()  {	return petitRoqueNoir; }
 	public boolean 	isGrandRoqueBlanc() {	return grandRoqueBlanc; }
 	public boolean 	isGrandRoqueNoir()  {	return grandRoqueNoir; }
-	public void 	annulerPetitRoqueBlanc() {	petitRoqueBlanc = false; }
-	public void 	annulerPetitRoqueNoir()  {	petitRoqueNoir  = false; }
-	public void 	annulerGrandRoqueBlanc() {	grandRoqueBlanc = false; }
-	public void 	annulerGrandRoqueNoir()  {	grandRoqueNoir  = false; }
+	public void 	annulerPetitRoqueBlanc() {	petitRoqueBlanc = false; plateau.zobristXOR(PRB); }
+	public void 	annulerPetitRoqueNoir()  {	petitRoqueNoir  = false; plateau.zobristXOR(GRN); }
+	public void 	annulerGrandRoqueBlanc() {	grandRoqueBlanc = false; plateau.zobristXOR(GRB); }
+	public void 	annulerGrandRoqueNoir()  {	grandRoqueNoir  = false; plateau.zobristXOR(GRN); }
 
 
 	
@@ -263,5 +275,10 @@ public class Etat implements Noeud {
 		  .append(plateau.toString())
 		  .append("Trait :  ").append(trait.name());
 		return sb.toString();
+	}
+
+	@Override
+	public long hash() {
+		return plateau.getZobristHash();
 	}
 }
