@@ -1,44 +1,37 @@
 package raphael.jeu.pieces;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
+import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
+import raphael.jeu.Plateau;
 
 public class Dame extends Piece {
 
-	private final int [] DEPLACEMENTS = { -11,-9, 11, 9, -10, 10, -1, 1 };
+	private static final int [] DEPLACEMENTS = { -11,-9, 11, 9, -10, 10, -1, 1 };
 
-	public Dame(Dame dame) {
-		super(dame);
-	}
 	
 	public Dame(CouleurPiece couleur) {
 		super(couleur);
 	}
-	
-	public Dame(CouleurPiece couleur, int position) {
-		super(couleur, position);
-	}
 
-	@Override
-	public List<Coup> listeCoups(boolean allerProfond) {
-		ArrayList<Coup> liste = new ArrayList<Coup>(8);
+	public static ListeDeCoups listeCoups(Plateau plateau, int piece) {
+		ListeDeCoups liste = new ListeDeCoups();
+		int position = Piece.getPosition(piece);
 		
 		for (int deplacement : DEPLACEMENTS) {
 			boolean quitter = false;
 			int i = 0; // Coef multiplicateur pour le deplacement
 			
 			while(!quitter) {
-				int to = positionTAB120(deplacement * ++i);
+				int to = positionTAB120(deplacement * ++i, position);
 				
 				if(to != -1) {
-					if(getPlateau().getCase(to) != null)
+					if(plateau.getCase(to) != 0)
 						quitter = true;
-					if(getPlateau().getCase(to) == null || getPlateau().getCase(to).getCouleur() != getCouleur())
-						liste.add(new Coup(getPosition(), to));
+					if(plateau.getCase(to) == 0 
+							|| Piece.getCouleur(plateau.getCase(to)) != Piece.getCouleur(piece))
+						liste.add(new Coup(position, to));
 				}
 				else
 					quitter = true;
@@ -60,7 +53,7 @@ public class Dame extends Piece {
 	}
 	
 	@Override
-	protected Dame makeCopy() {
-		return new Dame(this);
+	public int bitvalue() {
+		return 2;
 	}
 }

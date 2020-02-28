@@ -1,48 +1,40 @@
 package raphael.jeu.pieces;
-import java.util.ArrayList;
-
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
 import raphael.jeu.Coup.TypeCoup;
+import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
+import raphael.jeu.Plateau;
 import raphael.jeu.Utilitaire;
 
 public class Tour extends Piece {
 
-	private final int [] DEPLACEMENTS = { -10, 10, -1, 1 };
-	private boolean aDejaBouge = false;
-	
-	public Tour(Tour tour) {
-		super(tour);
-		aDejaBouge = tour.aDejaBouge;
-	}
+	private static final int [] DEPLACEMENTS = { -10, 10, -1, 1 };
 	
 	public Tour(CouleurPiece couleur) {
 		super(couleur);
 	}
-	
-	public Tour(CouleurPiece couleur, int position) {
-		super(couleur, position);
-	}
 
-	@Override
-	public ArrayList<Coup> listeCoups(boolean allerProfond) {
-		ArrayList<Coup> liste = new ArrayList<Coup>(8);
+	public static ListeDeCoups listeCoups(Plateau plateau, int piece) {
+		ListeDeCoups liste = new ListeDeCoups();
+		int position = Piece.getPosition(piece);
+		boolean aDejaBouge = getABouge(piece);
+
 		Coup.TypeCoup type = aDejaBouge ? TypeCoup.NORMAL : 
-			(Utilitaire.indexToColumn(getPosition()) == 7 ? Coup.TypeCoup.PETIT_ROQUE_ANNULE
+			(Utilitaire.indexToColumn(position) == 7 ? Coup.TypeCoup.PETIT_ROQUE_ANNULE
 					: Coup.TypeCoup.GRAND_ROQUE_ANNULE);
 		
 		for (int deplacement : DEPLACEMENTS) {
 			boolean quitter = false;
 			int i = 0; // Coef multiplicateur pour le deplacement
 			while(!quitter) {
-				int to = positionTAB120(deplacement * ++i);
+				int to = positionTAB120(deplacement * ++i, position);
 				
 				if(to != -1) {
-					if(getPlateau().getCase(to) != null)
+					if(plateau.getCase(to) != 0)
 						quitter = true;
-					if(getPlateau().getCase(to) == null || getPlateau().getCase(to).getCouleur() != getCouleur())
-						liste.add(new Coup(getPosition(), to, type));
+					if(plateau.getCase(to) == 0 || Piece.getCouleur(plateau.getCase(to)) != Piece.getCouleur(piece))
+						liste.add(new Coup(position, to, type));
 				}
 				else
 					quitter = true;
@@ -63,7 +55,7 @@ public class Tour extends Piece {
 	}
 	
 	@Override
-	protected Tour makeCopy() {
-		return new Tour(this);
+	public int bitvalue() {
+		return 4;
 	}
 }

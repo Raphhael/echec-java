@@ -6,7 +6,6 @@ import java.util.List;
 import raphael.algo.Joueur;
 import raphael.algo.Noeud;
 import raphael.jeu.Coup.TypeCoup;
-import raphael.jeu.pieces.Dame;
 
 /**
  * Représente l'état "logique" du jeu :
@@ -187,13 +186,13 @@ public class Etat implements Noeud {
 		
 		/**** Avantage des pièces ********/
 		for (int i = 0; i < plateau.getCases().length; i++) {
-			Piece piece = plateau.getCase(i);
-			if(piece == null)
+			int piece = plateau.getCase(i);
+			if(piece == 0)
 				continue;
-			if(piece.getCouleur() == joueur)
-				evaluationValue += piece.getValue();
+			if(Piece.getCouleur(piece) == joueur)
+				evaluationValue += Piece.getEvalValue(piece);
 			else
-				evaluationValue -= piece.getValue();
+				evaluationValue -= Piece.getEvalValue(piece);
 		}
 		
 		/* Initialisation des vars */
@@ -212,9 +211,9 @@ public class Etat implements Noeud {
 			for (int i = 0; i < coupsPerso.size(); i++) {
 				Coup coup = coupsPerso.get(i);
 				if(maCouleur == CouleurPiece.BLANC && coup.getFrom() > coup.getTo()) 
-					evaluationValue += plateau.getCase(coup.getFrom()).getValue() * Constantes.COEF_AVANCEMENT_PIECES;
+					evaluationValue += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
 				if(maCouleur == CouleurPiece.NOIR && coup.getFrom() < coup.getTo()) 
-					evaluationValue += plateau.getCase(coup.getFrom()).getValue() * Constantes.COEF_AVANCEMENT_PIECES;
+					evaluationValue += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
 			}
 		}
 		
@@ -247,8 +246,8 @@ public class Etat implements Noeud {
 		
 		/*** Pas bouger la dame en début de game***/
 		if(avancement < 16) {
-			boolean dameBlanche = plateau.getCase(59) instanceof Dame && plateau.getCase(59).getCouleur() == CouleurPiece.BLANC;
-			boolean dameNoire = plateau.getCase(3) instanceof Dame && plateau.getCase(3).getCouleur() == CouleurPiece.NOIR;
+			boolean dameBlanche = (2 & plateau.getCase(59)) == 1 && Piece.getCouleur(plateau.getCase(59)) == CouleurPiece.BLANC;
+			boolean dameNoire = (2 & plateau.getCase(3)) == 1 && Piece.getCouleur(plateau.getCase(3)) == CouleurPiece.NOIR;
 			if(maCouleur == CouleurPiece.NOIR) {
 				evaluationValue += Constantes.COEF_FORCER_DAME * (dameNoire ? 1 : -1);
 				evaluationValue += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameBlanche ? -1 : 1);

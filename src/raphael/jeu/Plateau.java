@@ -2,16 +2,14 @@ package raphael.jeu;
 
 import java.util.List;
 
-import raphael.jeu.pieces.Roi;
-
 /**
  * Représente le plateau (niveau logique)
  * Constitiué d'un tableau de Piece (null quand pas de pieces)
  * Un plateau est lié à un Etat.
  */
 public class Plateau {
-	private Piece []	 cases;
-	private Etat		 etat;
+	private int[]	 cases;	/* Tableau de pièces au format entier */
+	private Etat	 etat;
 	
 	private ListeDeCoups listeCoupsBlancs;		/*	On sauvegarde les		 */
 	private ListeDeCoups listeCoupsNoirs;		/*	listes de coups déjà	 */
@@ -30,7 +28,7 @@ public class Plateau {
 	
 	/******************** Constructeurs *********************/
 	
-	public Plateau(Piece [] cases) {
+	public Plateau(int [] cases) {
 		this.cases = cases;
 	}
 	
@@ -38,7 +36,9 @@ public class Plateau {
 	 * Si on ne lui passe rien il charge un plateau par défaut
 	 */
 	public Plateau() {
-		this(Constantes.PLATEAU_DEFAUT);
+		Piece []pieces = Constantes.PLATEAU_DEFAUT;
+		cases = new int[pieces.length];
+		
 		zobristTable = new long[64][12];
 		zobristHash = 0;
 		
@@ -46,10 +46,10 @@ public class Plateau {
 			for(int k = 0; k < 12; k++)
 				zobristTable[i][k] = Constantes.GENERATOR.nextLong();
 			
-			if(cases[i] != null) {
-				cases[i].setPosition(i);
-				cases[i].setPlateau(this);
-				zobristHash ^= zobristTable[i][cases[i].zobriestValue()]; 
+			if(pieces[i] != null) {
+				cases[i] = Piece.makePiece(pieces[i]);
+				cases[i] = Piece.setPosition(cases[i], i);
+				zobristHash ^= zobristTable[i][Piece.getZobriestValue(cases[i])];
 			}
 		}
 		System.out.println("Code = " + zobristHash);
@@ -62,19 +62,12 @@ public class Plateau {
 	 * quoi on peut éviter aussi de recalculer sa position.
 	 */
 	public Plateau(Plateau plateau, boolean needMajRoiBlanc, boolean needMajRoiNoir) {
-		Piece []copie = new Piece[plateau.cases.length];
-		for (int i = 0; i < copie.length; i++) {
-			if (plateau.cases[i] != null) {
-				copie[i] = (Piece) plateau.cases[i].makeCopy();
-				copie[i].setPlateau(this);
-			}
-		}
+		this.cases = plateau.cases.clone();
 		if(!needMajRoiBlanc)
 			this.positionRoiBlanc = plateau.positionRoiBlanc;
 		if(!needMajRoiNoir)
 			this.positionRoiNoir = plateau.positionRoiNoir;
 		
-		this.cases = copie;
 		this.zobristHash = plateau.zobristHash;
 		this.zobristTable = plateau.zobristTable;
 	}
@@ -110,12 +103,11 @@ public class Plateau {
 		ListeDeCoups coups  = new ListeDeCoups();
 		
 		for (int i = 0; i < cases.length; i++) {
-			Piece p = cases[i];
-			if(p == null) 
+			if(cases[i] == 0) 
 				continue;
 			
-			if(p.getCouleur() == couleur) {
-				List<Coup> listePiece = p.listeCoups(goDeep);
+			if(Piece.getCouleur(cases[i]) == couleur) {
+				List<Coup> listePiece = Piece.listeCoups(this, cases[i], goDeep);
 				
 				if(!goDeep) {
 					coups.addAll(listePiece);
@@ -194,8 +186,7 @@ public class Plateau {
 			return positionRoiNoir;;
 		
 		for (int i = 0; i < cases.length; i++) {
-			if(cases[i] != null && cases[i].getCouleur() == couleur
-												&& cases[i] instanceof Roi) {
+			if(Piece.getCouleur(cases[i]) == couleur && (cases[i] & 1) == 1) {
 
 				if(couleur == CouleurPiece.BLANC)
 					positionRoiBlanc = i;
@@ -215,7 +206,7 @@ public class Plateau {
 	 * @param caseIdx	L'indice de la case
 	 */
 	private void zobristXOR(int caseIdx) {
-		zobristHash ^= zobristTable[caseIdx][cases[caseIdx].zobriestValue()];
+		zobristHash ^= zobristTable[caseIdx][Piece.getZobriestValue(cases[caseIdx])];
 	}
 	public void zobristXOR(long value) {
 		zobristHash ^= value;
@@ -247,8 +238,8 @@ public class Plateau {
 	public Etat getEtat() {	return etat; }
 	public void setEtat(Etat etat) { this.etat = etat; }
 	
-	public Piece[] getCases() {		return cases; }
-	public Piece   getCase(int i) { return cases[i]; }
+	public int[] getCases() {	  return cases; }
+	public int   getCase(int i) { return cases[i]; }
 	
 	/**
 	 * Place une piece à une certaine position
@@ -262,11 +253,11 @@ public class Plateau {
 	 * @param i		La case de destination
 	 * @param piece La piece à bouger
 	 */
-	public void    setCase(int i, Piece piece) {
+	public void    setCase(int i, int piece) {
 		removeCase(i);
 		cases[i] = piece;
 		zobristXOR(i);
-		piece.setPosition(i);
+		Piece.setPosition(piece, i);
 	}
 	
 	/**
@@ -276,9 +267,9 @@ public class Plateau {
 	 * @param i		l'indice de la case à "vider"
 	 */
 	public void removeCase(int i) {
-		if(cases[i] != null)
+		if(cases[i] != 0)
 			zobristXOR(i);
-		cases[i] = null;
+		cases[i] = 0;
 	}
 
 	
@@ -287,24 +278,11 @@ public class Plateau {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		int i = 0;
-		for (Piece piece : cases) {
-			sb.append(piece == null ? " " : piece.getClass().getSimpleName().charAt(0))
-			  .append(" ");
+		for (; i < cases.length; i++) {
 			
-			if(++i%8 == 0)
-				sb.append(System.lineSeparator());
-		}
-		return sb.toString();
-	}
-	
-	public String toStringFull() {
-		StringBuffer sb = new StringBuffer();
-		int i = 0;
-		for (Piece piece : cases) {
-			sb.append(piece == null ? "null" : piece.toString())
-			  .append(" ");
+			sb.append(Piece.toSmallString(cases[i])).append(" ");
 			
-			if(++i%8 == 0)
+			if((i+1)%8 == 0)
 				sb.append(System.lineSeparator());
 		}
 		return sb.toString();

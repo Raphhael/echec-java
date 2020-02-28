@@ -1,45 +1,32 @@
 package raphael.jeu.pieces;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
+import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
+import raphael.jeu.Plateau;
 
 public class Cavalier extends Piece {
-	private final int [] DEPLACEMENTS = { -12,-21,-19,-8,12,21,19,8 };
-	
-	public Cavalier(Cavalier cavalier) {
-		super(cavalier);
-	}
+	private static final int [] DEPLACEMENTS = { -12,-21,-19,-8,12,21,19,8 };
 	
 	public Cavalier(CouleurPiece couleur) {
 		super(couleur);
 	}
-	
-	public Cavalier(CouleurPiece couleur, int position) {
-		super(couleur, position);
-	}
 
-	@Override
-	public List<Coup> listeCoups(boolean allerProfond) {
-		ArrayList<Coup> liste = new ArrayList<Coup>(8);
+	public static ListeDeCoups listeCoups(Plateau plateau, int piece) {
+		ListeDeCoups liste = new ListeDeCoups();
+		int position = Piece.getPosition(piece);
+		
 		
 		for (int deplacement : DEPLACEMENTS) {
-			int to = positionTAB120(deplacement);
+			int to = positionTAB120(deplacement, position);
 
-			if((to != -1 && getPlateau().getCase(to) == null) 
-					|| (to != -1 && getPlateau().getCase(to).getCouleur() != getCouleur()))
-				liste.add(new Coup(getPosition(), to));
+			if((to != -1 && plateau.getCase(to) == 0) 
+					|| (to != -1 && Piece.getCouleur(plateau.getCase(to)) != Piece.getCouleur(piece)))
+				liste.add(new Coup(position, to));
+
 		}
-		
 		return liste;
-	}
-	
-	@Override
-	protected Cavalier makeCopy() {
-		return new Cavalier(this);
 	}
 
 	@Override
@@ -50,5 +37,10 @@ public class Cavalier extends Piece {
 	@Override
 	protected byte getZobriestValue() {
 		return 0x0A;
+	}
+	
+	@Override
+	public int bitvalue() {
+		return 16;
 	}
 }

@@ -24,18 +24,13 @@ public class Coup {
 		this(from, to, TypeCoup.NORMAL);
 	}
 
-	public int getTo() {
-		return to;
-	}
-
-	public int getFrom() {
-		return from;
-	}
+	public int getTo() {	return to; }
+	public int getFrom() {	return from; }
 	
 	private static void roquer(Etat etat, int posRoiDep, int posRoiFin,
 									 int posTourDep, int posTourFin) {
-		Piece tour = etat.getPlateau().getCase(posTourDep);
-		Piece roi = etat.getPlateau().getCase(posRoiDep);
+		int tour = etat.getPlateau().getCase(posTourDep);
+		int roi = etat.getPlateau().getCase(posRoiDep);
 		
 		etat.getPlateau().removeCase(posRoiDep);
 		etat.getPlateau().removeCase(posTourDep);
@@ -53,8 +48,8 @@ public class Coup {
 		
 		Plateau plateau = etat.getPlateau();
 		
-		Piece sauvFrom = plateau.getCase(from);
-		Piece sauvTo = plateau.getCase(to);
+		int sauvFrom = plateau.getCase(from);
+		int sauvTo = plateau.getCase(to);
 		ListeDeCoups sauvCoups = plateau.getListeDeCoupBlancs(false);
 		plateau.setListeDeCoupBlancs(null, false);
 		
@@ -62,13 +57,13 @@ public class Coup {
 		plateau.setCase(to, sauvFrom);
 		
 		
-		boolean res = plateau.enEchec(sauvFrom.getCouleur()) ? false : true;
+		boolean res = plateau.enEchec(Piece.getCouleur(sauvFrom)) ? false : true;
 		
 		plateau.setListeDeCoupBlancs(sauvCoups, false);
 		plateau.setCase(from, sauvFrom);
 		
-		if(sauvTo != null)	plateau.setCase(to, sauvTo);
-		else				plateau.removeCase(to);
+		if(sauvTo != 0)	plateau.setCase(to, sauvTo);
+		else			plateau.removeCase(to);
 		
 		return res;
 	}

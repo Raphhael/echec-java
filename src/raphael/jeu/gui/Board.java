@@ -44,11 +44,11 @@ public class Board extends GridPane {
 	private void syncEtat() {
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
-				Piece piece = etat.getPlateau().getCase(i * 8 + j);
+				int piece = etat.getPlateau().getCase(i * 8 + j);
 				Button btn = btnListe[8 * i + j];
-				if (piece != null) {
-					btn.setText(String.valueOf(piece.getClass().getSimpleName().charAt(0)));
-					btn.setTextFill(piece.getCouleur() == CouleurPiece.NOIR ? Color.BLACK : Color.WHITE);
+				if (piece != 0) {
+					btn.setText(Piece.toSmallString(piece));
+					btn.setTextFill(Piece.getCouleur(piece) == CouleurPiece.NOIR ? Color.BLACK : Color.WHITE);
 				}
 				else
 					btn.setText("");

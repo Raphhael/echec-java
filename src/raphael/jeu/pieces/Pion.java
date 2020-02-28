@@ -1,71 +1,55 @@
 package raphael.jeu.pieces;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
+import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
+import raphael.jeu.Plateau;
 import raphael.jeu.Utilitaire;
 
 public class Pion extends Piece {
-	private List<Coup> coups;
 
-	public Pion(Pion pion) {
-		super(pion);
-	}
-	
 	public Pion(CouleurPiece couleur) {
 		super(couleur);
 	}
-	
-	public Pion(CouleurPiece couleur, int position) {
-		super(couleur, position);
-	}
 
-	@Override
-	public List<Coup> listeCoups(boolean allerProfond) {
-		this.coups = new ArrayList<Coup>(5);
-		if(getCouleur() == CouleurPiece.BLANC) 
-			listeCoupsPionBlanc();
-		else
-			listeCoupsPionNoir();
-		return coups;
+	public static ListeDeCoups listeCoups(Plateau plateau, int piece) {
+		ListeDeCoups liste = new ListeDeCoups();
+		int position = Piece.getPosition(piece);
+		CouleurPiece couleur = Piece.getCouleur(piece);
+		
+		if(couleur == CouleurPiece.BLANC) {
+			if(checkerCase(-10, position, plateau, liste) && Utilitaire.indexToRow(position) == 6)
+				checkerCase(-20, position, plateau, liste);
+
+			mangerDiagonale(-11, position, plateau, couleur, liste);
+			mangerDiagonale(-9, position, plateau, couleur, liste);
+		}
+		else {
+			if(checkerCase(10, position, plateau, liste) && Utilitaire.indexToRow(position) == 1)
+				checkerCase(20, position, plateau, liste);
+
+			mangerDiagonale(11, position, plateau, couleur, liste);
+			mangerDiagonale(9, position, plateau, couleur, liste);
+		}
+		return liste;
 	}
 	
-	private boolean checkerCase(int deplacement) {
-		int to = positionTAB120(deplacement);
-		if(to != -1 && getPlateau().getCase(to) == null) {
-			coups.add(new Coup(getPosition(), to));
+	private static boolean checkerCase(int deplacement, int position, Plateau plateau, ListeDeCoups coups) {
+		int to = positionTAB120(deplacement, position);
+		if(to != -1 && plateau.getCase(to) == 0) {
+			coups.add(new Coup(position, to));
 			return true;
 		}
 		return false;
 	}
 	
-	private void mangerDiagonale(int deplacement) {
-		int to = positionTAB120(deplacement);
+	private static void mangerDiagonale(int deplacement, int position, Plateau plateau, CouleurPiece couleur, ListeDeCoups coups) {
+		int to = positionTAB120(deplacement, position);
 		if(		to != -1 
-				&& getPlateau().getCase(to) != null 
-				&& getPlateau().getCase(to).getCouleur() != getCouleur())
-			coups.add(new Coup(getPosition(), to));
-	}
-
-	private void listeCoupsPionBlanc() {
-
-		if(checkerCase(-10) && Utilitaire.indexToRow(getPosition()) == 6)
-			checkerCase(-20);
-
-		mangerDiagonale(-11);
-		mangerDiagonale(-9);
-	}
-	
-	
-	private void listeCoupsPionNoir() {
-		if(checkerCase(10) && Utilitaire.indexToRow(getPosition()) == 1)
-			checkerCase(20);
-
-		mangerDiagonale(11);
-		mangerDiagonale(9);
+				&& plateau.getCase(to) != 0 
+				&& Piece.getCouleur(plateau.getCase(to)) != couleur)
+			coups.add(new Coup(position, to));
 	}
 	
 	@Override
@@ -79,7 +63,7 @@ public class Pion extends Piece {
 	}
 	
 	@Override
-	protected Pion makeCopy() {
-		return new Pion(this);
+	public int bitvalue() {
+		return 32;
 	}
 }
