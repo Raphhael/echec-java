@@ -15,9 +15,8 @@ public class Roi extends Piece {
 		super(couleur);
 	}
 
-	public static ListeDeCoups listeCoups(Plateau plateau, int piece, boolean allerProfond) {
+	public static ListeDeCoups listeCoups(Plateau plateau, int position,  int piece, boolean allerProfond) {
 		ListeDeCoups listeCoups = new ListeDeCoups();
-		int position = Piece.getPosition(piece);
 		CouleurPiece couleur = Piece.getCouleur(piece);
 		
 		for (int deplacement : DEPLACEMENTS) {

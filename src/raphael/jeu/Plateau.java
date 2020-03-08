@@ -48,7 +48,6 @@ public class Plateau {
 			
 			if(pieces[i] != null) {
 				cases[i] = Piece.makePiece(pieces[i]);
-				cases[i] = Piece.setPosition(cases[i], i);
 				zobristHash ^= zobristTable[i][Piece.getZobriestValue(cases[i])];
 			}
 		}
@@ -107,7 +106,7 @@ public class Plateau {
 				continue;
 			
 			if(Piece.getCouleur(cases[i]) == couleur) {
-				List<Coup> listePiece = Piece.listeCoups(this, cases[i], goDeep);
+				List<Coup> listePiece = Piece.listeCoups(this, i, cases[i], goDeep);
 				
 				if(!goDeep) {
 					coups.addAll(listePiece);
@@ -257,7 +256,7 @@ public class Plateau {
 		removeCase(i);
 		cases[i] = piece;
 		zobristXOR(i);
-		Piece.setPosition(piece, i);
+//		Piece.setPosition(piece, i);
 	}
 	
 	/**

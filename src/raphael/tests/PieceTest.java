@@ -9,13 +9,6 @@ import raphael.jeu.Piece;
 
 class PieceTest {
 	@Test
-	void testSetPositionIntInt() {
-		assertEquals(0b0000000000001__0001__111111__0__0__0__000001, Piece.setPosition(0b0000000000001__0001__000000__0__0__0__000001, 63));
-		assertEquals(0b0000000000001__0001__000001__0__0__0__000001, Piece.setPosition(0b0000000000001__0001__000000__0__0__0__000001, 1));
-		assertEquals(0b0000000000001__0001__000000__0__0__0__000001, Piece.setPosition(0b0000000000001__0001__111111__0__0__0__000001, 0));
-	}
-
-	@Test
 	void testGetZobriestValueInt() {
 		assertEquals(0, Piece.getZobriestValue(0b0000000000001__0000__100001__0__0__0__000001));
 		assertEquals(3, Piece.getZobriestValue(0b0000000000011__0011__100001__0__0__0__000001));
@@ -26,13 +19,6 @@ class PieceTest {
 	void testGetEvalValueInt() {
 		assertEquals(7, Piece.getEvalValue(0b0000000000111__0001__000001__0__0__0__000001));
 		assertEquals(7175, Piece.getEvalValue(0b1110000000111__0000__000001__0__0__0__000001));
-	}
-
-	@Test
-	void testGetPositionInt() {
-		assertEquals(63, Piece.getPosition(0b0000000000111__0001__111111__1__0__0__000001));
-		assertEquals(0, Piece.getPosition(0b1110000000111__0001__000000__1__0__0__000001));
-		assertEquals(2, Piece.getPosition(0b1110000000111__0001__000010__1__0__0__000001));
 	}
 
 	@Test

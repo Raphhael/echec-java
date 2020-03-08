@@ -15,9 +15,8 @@ public class Fou extends Piece {
 		super(couleur);
 	}
 	
-	public static ListeDeCoups listeCoups(Plateau plateau, int piece) {
+	public static ListeDeCoups listeCoups(Plateau plateau, int position, int piece) {
 		ListeDeCoups liste = new ListeDeCoups();
-		int position = Piece.getPosition(piece);
 				
 		for (int deplacement : DEPLACEMENTS) {
 			boolean quitter = false;

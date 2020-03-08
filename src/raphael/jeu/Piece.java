@@ -13,7 +13,7 @@ import raphael.jeu.pieces.Tour;
  * 
  * 0                13         17          23        24        25       31
  * +--------+-------+----------+-----------+---------+---------+--------+
- * |   EVAL VALUE   | ZOBRIEST | POSITION  | A BOUGÉ | COULEUR | PCFTDR |
+ * |   EVAL VALUE   | ZOBRIEST |           | A BOUGÉ | COULEUR | PCFTDR |
  * +--------+-------+----------+-----------+---------+---------+--------+
  * 
  * avec :
@@ -58,19 +58,20 @@ public abstract class Piece implements Cloneable {
 	 * infinies.
 	 * 
 	 * @param	plateau			Liens vers le plateau
+	 * @param	position		Position de la pièce
 	 * @param	piece			Piece à vérifier
 	 * @param	allerProfond	Si true, execute les appels récursif (estAttaque).
 	 * @return					La liste des coups possible pour cette pièce.
 	 */
-	public	static	ListeDeCoups listeCoups(Plateau plateau, int piece, boolean allerProfond) {
+	public	static	ListeDeCoups listeCoups(Plateau plateau, int position, int piece, boolean allerProfond) {
 		
 		switch(piece & 63) {
-			case 1: return Roi.listeCoups(plateau, piece, allerProfond);
-			case 2: return Dame.listeCoups(plateau, piece);
-			case 4: return Tour.listeCoups(plateau, piece);
-			case 8: return Fou.listeCoups(plateau, piece);
-			case 16: return Cavalier.listeCoups(plateau, piece);
-			case 32: return Pion.listeCoups(plateau, piece);
+			case 1: return Roi.listeCoups(plateau, position, piece, allerProfond);
+			case 2: return Dame.listeCoups(plateau, position, piece);
+			case 4: return Tour.listeCoups(plateau, position, piece);
+			case 8: return Fou.listeCoups(plateau, position, piece);
+			case 16: return Cavalier.listeCoups(plateau, position, piece);
+			case 32: return Pion.listeCoups(plateau, position, piece);
 			default: return null;
 		}
 	}
@@ -103,14 +104,6 @@ public abstract class Piece implements Cloneable {
 		nouv = setCouleur(nouv, piece.getCouleur());
 		
 		return nouv;
-	}
-
-	public static int setPosition(int piece, int pos) {
-		return piece | pos << 9;
-	}
-
-	public static int getPosition(int piece) {
-		return 63 & piece >> 9 ;
 	}
 
 	public static int getZobriestValue(int piece) {

@@ -13,9 +13,8 @@ public class Pion extends Piece {
 		super(couleur);
 	}
 
-	public static ListeDeCoups listeCoups(Plateau plateau, int piece) {
+	public static ListeDeCoups listeCoups(Plateau plateau, int position, int piece) {
 		ListeDeCoups liste = new ListeDeCoups();
-		int position = Piece.getPosition(piece);
 		CouleurPiece couleur = Piece.getCouleur(piece);
 		
 		if(couleur == CouleurPiece.BLANC) {
