@@ -1,77 +1,82 @@
 package raphael.algo;
 
-import java.util.List;
+import raphael.algo.structures.Algorithme;
+import raphael.algo.structures.ListeDeNoeuds;
+import raphael.algo.structures.Noeud;
 
-import raphael.jeu.Etat;
-import raphael.jeu.Utilitaire;
+/**
+ * Algorithme alpha-beta dans sa plus simple forme.
+ */
+public class AlphaBeta extends Algorithme {
+	
+	public Noeud start(Noeud noeud, int profondeurMax, int alpha, int beta) {
+		ListeDeNoeuds<?> successeurs;
+		Noeud            meilleurNoeud = null;
+		int              currentValue  = Constantes.MOINS_INFINI;
 
-public class AlphaBeta implements Algorithme{
-	private static Noeud bon;
-	private static Joueur joueur;
-	private static int profOri;
-	private static int calc = 0;
+		successeurs = noeud.successeurs();
 
-	public Noeud start(Noeud noeud, int profondeur, Joueur joueur) {
-		AlphaBeta.joueur = joueur;
-		profOri = profondeur;
-		int best = alphaBeta(noeud, profondeur, true, Integer.MIN_VALUE, Integer.MAX_VALUE);
-		System.out.println("Meilleur score : " + best);
-		System.out.println("calc " + calc + " successeurs()");
-		return bon;
+		for (int i = 0; i < successeurs.size(); i++) {
+			Noeud fils = successeurs.get(i);
+			int   ab   = alphaBeta(fils, profondeurMax - 1, false, alpha, beta);
+			
+			if (ab > currentValue || meilleurNoeud == null) {
+				currentValue = ab;
+				meilleurNoeud = fils;
+			}
+
+			if (currentValue >= beta)
+				break;
+
+			alpha = Math.max(alpha, currentValue);
+		}
+
+		return meilleurNoeud;
 	}
 	
-	public static int alphaBeta(Noeud noeud, int profondeur, boolean estMax, int alpha, int beta) {
-		if(profondeur == 0 || noeud.estTerminal())
-			return noeud.evaluation(joueur);
-		calc++;
-		
-		List<Noeud> succ = noeud.successeurs();
-		if(profondeur > 1) {
-			succ.sort((o1, o2) -> {
-				int row1 = Math.abs(Utilitaire.indexToRow(((Etat) o1).getCoupPrecedent().getFrom()));
-				int row2 = Math.abs(Utilitaire.indexToRow(((Etat) o2).getCoupPrecedent().getFrom()));
-				int col1 = Math.abs(Utilitaire.indexToColumn(((Etat) o1).getCoupPrecedent().getFrom()) - 4);
-				int col2 = Math.abs(Utilitaire.indexToColumn(((Etat) o2).getCoupPrecedent().getFrom()) - 4);
-				if(row1 == 1 || row1 == 6) {
-					if(row2 != 1 && row2 != 6)
-						return 1;
-				}
-				else {
-					if(row2 == 1 || row2 == 6)
-						return -1;
-				}
-				return col2 == col1 ? 0 : (col2 < col1 ? 1 : -1);
-			});
-		}
-		
-		if(estMax) {
-			int max = Integer.MIN_VALUE;
-			
-			for (Noeud fils : succ) {
-				int remonte = alphaBeta(fils, profondeur - 1, false, alpha, beta);
-				if(max < remonte) {
-					max = remonte;
-					if(profOri == profondeur)
-						bon = fils;
-				}
-				if(max >= beta)
-					return max;
-				
-				alpha = Math.max(alpha, max);
-			}
-			return max;
-		}
-		else {
-			int min = Integer.MAX_VALUE;
-			for (Noeud fils : succ) {
-				min = Math.min(min, alphaBeta(fils, profondeur - 1, true, alpha, beta));
+	/**
+	 * Le premier niveau (noeud max) est traité directement dans la
+	 * fonction {@link AlphaBeta#start} pour récupérer facilement
+	 * le meilleur coup.
+	 */
+	@Override
+	public Noeud start(Noeud noeud, int profondeur)  throws AlgorithmeException {
+		return start(noeud, profondeur, Constantes.MOINS_INFINI, Constantes.PLUS_INFINI);
+	}
 
-				if(min <= alpha)
-					return min;
-				
-				beta = Math.min(beta, min);
+	public int alphaBeta(Noeud noeud, int profondeur, boolean estMax, int alpha, int beta) {
+		ListeDeNoeuds<?> successeurs;
+		int              currentValue;
+		Metrique.update("nbAppelsRecursifs");
+		
+		if (stopCondition(noeud, profondeur))
+			return noeud.evaluation(getJoueur());
+
+		successeurs = noeud.successeurs();
+		Metrique.update("nbSuccesseurs");
+
+		if (estMax) {
+			currentValue = Constantes.MOINS_INFINI;
+
+			for (int i = 0; i < successeurs.size(); i++) {
+				currentValue = Math.max(currentValue, alphaBeta(successeurs.get(i), profondeur - 1, false, alpha, beta));
+
+				if (currentValue >= beta)
+					break;
+
+				alpha = Math.max(alpha, currentValue);
 			}
-			return min;
+		} else {
+			currentValue = Constantes.PLUS_INFINI;
+
+			for (int i = 0; i < successeurs.size(); i++) {
+				currentValue = Math.min(currentValue, alphaBeta(successeurs.get(i), profondeur - 1, true, alpha, beta));
+				if (currentValue <= alpha)
+					break;
+
+				beta = Math.min(beta, currentValue);
+			}
 		}
+		return currentValue;
 	}
 }

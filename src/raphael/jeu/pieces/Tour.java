@@ -9,7 +9,7 @@ import raphael.jeu.Utilitaire;
 
 public class Tour extends Piece {
 
-	private static final int [] DEPLACEMENTS = { -10, 10, -1, 1 };
+	private static final int [] DEPLACEMENTS = { -1, 10, -10, 1 };
 	
 	public Tour(CouleurPiece couleur) {
 		super(couleur);
@@ -23,11 +23,11 @@ public class Tour extends Piece {
 			(Utilitaire.indexToColumn(position) == 7 ? Coup.TypeCoup.PETIT_ROQUE_ANNULE
 					: Coup.TypeCoup.GRAND_ROQUE_ANNULE);
 		
-		for (int deplacement : DEPLACEMENTS) {
+		for (int i = 0; i < DEPLACEMENTS.length; i++) {
 			boolean quitter = false;
-			int i = 0; // Coef multiplicateur pour le deplacement
+			int j = 0; // Coef multiplicateur pour le deplacement
 			while(!quitter) {
-				int to = positionTAB120(deplacement * ++i, position);
+				int to = positionTAB120(DEPLACEMENTS[i] * ++j, position);
 				
 				if(to != -1) {
 					if(plateau.getCase(to) != 0)

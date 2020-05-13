@@ -27,4 +27,11 @@ public class Utilitaire {
 	public static int indexToColumn(int i) {
 		return i - 8 * (int)(i / 8);
 	}
+	
+	public static boolean isUpper(char c) {
+		if(c >= 'A' && c <= 'Z')
+			return true;
+		else
+			return false;
+	}
 }

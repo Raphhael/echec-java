@@ -1,6 +1,6 @@
 package raphael.jeu;
 
-import raphael.algo.Joueur;
+import raphael.algo.structures.Joueur;
 
 public enum CouleurPiece implements Joueur {
 	NOIR,

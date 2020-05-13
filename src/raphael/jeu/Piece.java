@@ -182,5 +182,32 @@ public abstract class Piece implements Cloneable {
 		}
 	}
 
+	public static String toFENString(int piece) {
+		String s = " ";
+		switch(piece & 63) {
+			case 1: s = "K"; break;
+			case 2: s = "Q"; break;
+			case 4: s = "R"; break;
+			case 8: s = "B"; break;
+			case 16: s = "N"; break;
+			case 32: s = "P"; break;
+		}
+		return getCouleur(piece) == CouleurPiece.BLANC ? s : s.toLowerCase();
+	}
+	public static Piece toFENPiece(char car) {
+		CouleurPiece couleur = Utilitaire.isUpper(car) ? CouleurPiece.BLANC : CouleurPiece.NOIR;
+		car = String.valueOf(car).toUpperCase().charAt(0);
+		switch(car) {
+			case 'K': return new Roi(couleur);
+			case 'Q': return new Dame(couleur);
+			case 'R': return new Tour(couleur);
+			case 'B': return new Fou(couleur);
+			case 'N': return new Cavalier(couleur);
+			case 'P': return new Pion(couleur);
+		}
+		System.err.println("FenException: pièce " + car + " inconnue.");
+		return null;
+	}
+
 	public CouleurPiece getCouleur() { return couleur; }
 }

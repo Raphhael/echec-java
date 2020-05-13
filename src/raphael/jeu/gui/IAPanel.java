@@ -1,92 +1,143 @@
 package raphael.jeu.gui;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.FlowPane;
-import raphael.algo.Algorithme;
 import raphael.algo.AlphaBeta;
+import raphael.algo.AlphaBetaMemory;
+import raphael.algo.Constantes;
+import raphael.algo.IterativeDeepeningAlphaBeta;
+import raphael.algo.MTDf;
+import raphael.algo.MTDfFixedTime;
 import raphael.algo.Minimax;
+import raphael.algo.structures.Algorithme;
 
-public class IAPanel extends FlowPane{
-	private Algorithme  algoChoisi;
-	private int			profondeur;
-	private Label		tempsExecution;
-	private Label		profondeurLabel;
-	
+public class IAPanel extends FlowPane {
+	private static Algorithme algoChoisi;
+	private int profondeur;
+	private Label tempsExecution;
+	private Label profondeurLabel;
+
 	public IAPanel(Board board) {
-		super(Orientation.HORIZONTAL);
+		super(Orientation.VERTICAL);
+		getStyleClass().addAll("bordered");
+		
+		Label tempsMax = new Label("Temps d'execution maximum en secondes");
+		TextField tempsMaxIn = new TextField("10");
 
 		Button autoPlay = new Button("IA, Joue !");
-		autoPlay.setStyle("-fx-font-size: " + (int)(ContainerPane.ZOOM * 30) + "; ");
+		autoPlay.getStyleClass().add("autoplay");
 		autoPlay.setOnAction((ActionEvent event) -> {
-			setTempsExecution(board.autoPlay(algoChoisi, profondeur));
+			try {
+				Constantes.TIMEOUT_MILLIS = 1000 * Integer.parseInt(tempsMaxIn.getText());
+				setTempsExecution(board.autoPlay(algoChoisi, profondeur));
+			} catch(NumberFormatException e) {
+				tempsMaxIn.setText("Format de nombre invalide");
+			}
 		});
 
 		tempsExecution = new Label();
-		profondeurLabel = new Label();
-		Button plus = new Button("+");
-		Button moins = new Button("-");
-		Button precedent = new Button("Précédent");
-		plus .setOnAction((ActionEvent event) -> { setProfondeur(++profondeur); });
-		moins.setOnAction((ActionEvent event) -> { setProfondeur(--profondeur); });
-		precedent.setOnAction((ActionEvent event) -> { board.precedent(); });
-		setProfondeur(3);
-				
-		getChildren().addAll(precedent, new ChoixGroupe(), profondeurLabel,
-							 moins, plus, autoPlay, tempsExecution);
 
+		getChildren().addAll(ChoixGroupe.instance(), new ChoixProfondeur(), tempsMax, tempsMaxIn, autoPlay, tempsExecution);
+		setAlgoChoisi(ChoixGroupe.instance().getSelection());
 	}
+
+	/**
+	 * Classe comprise du groupe de boutons et du label permettant
+	 * de choisir la profondeur maximale.
+	 */
+	private class ChoixProfondeur extends FlowPane {
+		public ChoixProfondeur() {
+			super(Orientation.HORIZONTAL);
+
+			profondeurLabel = new Label();
+			Button plus = new Button("+");
+			Button moins = new Button("-");
+			plus.setOnAction((ActionEvent event) -> {
+				setProfondeur(++profondeur);
+			});
+			moins.setOnAction((ActionEvent event) -> {
+				setProfondeur(--profondeur);
+			});
+			setProfondeur(3);
+			this.getChildren().addAll(profondeurLabel, moins, plus);
+		}
+	}
+
+
+
 	
 	/**
 	 * Boutons radios pour choisir l'algo
 	 */
-	private class ChoixGroupe extends FlowPane {
+	private static class ChoixGroupe extends FlowPane {
+		private static ChoixGroupe instance;
 		ToggleGroup toggleGroup;
-		
-		public ChoixGroupe() {
+		List<AlgoRadioButton> listeAlgorithmes;
+
+		private ChoixGroupe() {
 			super(Orientation.VERTICAL);
 			toggleGroup = new ToggleGroup();
-			
-			RadioButton minimax = new RadioButton("MiniMax");
-			minimax.setToggleGroup(toggleGroup);
-			minimax.setUserData("minimax");
-			 
-			RadioButton ab = new RadioButton("Alpha-Bêta");
-			ab.setToggleGroup(toggleGroup);
-			ab.setSelected(true);
-			ab.setUserData("alpha-beta");
-			
-			toggleGroup.selectedToggleProperty().addListener((ObservableValue<? extends Toggle> observable, Toggle o, Toggle n) -> {
-				setAlgoChoisi(getSelection());				
-			});
-			setAlgoChoisi(getSelection());
-			getChildren().addAll(minimax, ab);
-			
-			setPrefWrapLength(BASELINE_OFFSET_SAME_AS_HEIGHT);
-			setAlignment(Pos.CENTER);
+			listeAlgorithmes = new ArrayList<AlgoRadioButton>();
+
+			ajoutAlgo("MiniMax", Minimax.class, toggleGroup, true);
+			ajoutAlgo("Alpha-Bêta Memory", AlphaBetaMemory.class, toggleGroup);
+			ajoutAlgo("Alpha-Bêta", AlphaBeta.class, toggleGroup);
+			ajoutAlgo("Alpha-Bêta itératif", IterativeDeepeningAlphaBeta.class, toggleGroup);
+			ajoutAlgo("MTD-f profondeur", MTDf.class, toggleGroup);
+			ajoutAlgo("MTD-f temps", MTDfFixedTime.class, toggleGroup);
+
+			toggleGroup.selectedToggleProperty()
+					.addListener((ObservableValue<? extends Toggle> observable, Toggle o, Toggle n) -> {
+						setAlgoChoisi(getSelection());
+					});
+			getChildren().addAll(listeAlgorithmes);
+
+			setPrefHeight(25 * listeAlgorithmes.size());
+			setVgap(5);
 		}
-		
+
 		private Algorithme getSelection() {
 			return SmallFactory.get((String) toggleGroup.getSelectedToggle().getUserData());
 		}
+		private List<AlgoRadioButton> getAlgorithmes() {
+			return listeAlgorithmes;
+		}
+		public static ChoixGroupe instance() {
+			if(instance == null)
+				instance = new ChoixGroupe();
+			return instance;
+		}
+		private void ajoutAlgo(String name, Class<? extends Algorithme> algo, ToggleGroup groupe ) {
+			ajoutAlgo(name, algo, groupe, false);
+		}
+		private void ajoutAlgo(String name, Class<? extends Algorithme> algo, ToggleGroup groupe, boolean selected) {
+			listeAlgorithmes.add(new AlgoRadioButton(name, algo, groupe, selected));
+		}
+		
 	}
-	
+
 	/**
 	 * Factory String --> Algo
 	 */
 	private static class SmallFactory {
 		public static Algorithme get(String algoName) {
-			Class<? extends Algorithme> classe;
+			Class<? extends Algorithme> classe = null;
+			for (AlgoRadioButton btn: ChoixGroupe.instance().getAlgorithmes())
+				if(btn.equals((Object) algoName))
+					classe = btn.getAlgo();
 
-			if(algoName.equals("minimax"))	classe = Minimax.class;
-			else							classe = AlphaBeta.class;
+			if (classe == null)
+				System.err.println("No algo found for " + algoName);
 			
 			try {
 				return classe.getConstructor().newInstance();
@@ -95,17 +146,17 @@ public class IAPanel extends FlowPane{
 			}
 		}
 	}
-	
+
 	private void setProfondeur(int profondeur) {
 		this.profondeur = profondeur;
-		profondeurLabel.setText("Profondeur : " + profondeur);
+		profondeurLabel.setText("Profondeur : " + profondeur + "  ");
 	}
-	
+
 	private void setTempsExecution(double temps) {
 		tempsExecution.setText("Exécuté en " + temps + " secondes.");
 	}
-	
-	private void setAlgoChoisi(Algorithme algo) {
+
+	private static void setAlgoChoisi(Algorithme algo) {
 		algoChoisi = algo;
 	}
 

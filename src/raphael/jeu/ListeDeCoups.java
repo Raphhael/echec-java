@@ -6,7 +6,6 @@ import java.util.List;
 public class ListeDeCoups extends ArrayList<Coup> implements List<Coup> {
 	private static final long serialVersionUID = 6090708960341022931L;
 	
-	public static int compteurFrom = 0;
 	public static int compteurTo = 0;
 	
 	private ListeDeCoups dejaCalcule[] = new ListeDeCoups[64];
@@ -20,7 +19,6 @@ public class ListeDeCoups extends ArrayList<Coup> implements List<Coup> {
 	 */
 	public ListeDeCoups chercherCoupsFrom(int indice) {
 		ListeDeCoups selection = new ListeDeCoups();
-		compteurFrom++;
 		for (int i = 0; i < size(); i++) {
 			Coup coup = get(i);
 			if(coup.getFrom() == indice)

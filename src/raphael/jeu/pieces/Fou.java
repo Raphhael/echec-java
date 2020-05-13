@@ -18,12 +18,12 @@ public class Fou extends Piece {
 	public static ListeDeCoups listeCoups(Plateau plateau, int position, int piece) {
 		ListeDeCoups liste = new ListeDeCoups();
 				
-		for (int deplacement : DEPLACEMENTS) {
+		for (int i = 0; i < DEPLACEMENTS.length; i++) {
 			boolean quitter = false;
-			int i = 0; // Coef multiplicateur pour le deplacement
+			int j = 0; // Coef multiplicateur pour le deplacement
 			
 			while(!quitter) {
-				int to = positionTAB120(deplacement * ++i, position);
+				int to = positionTAB120(DEPLACEMENTS[i] * ++j, position);
 				
 				if(to != -1) {
 					if(plateau.getCase(to) != 0)

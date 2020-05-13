@@ -19,8 +19,8 @@ public class Roi extends Piece {
 		ListeDeCoups listeCoups = new ListeDeCoups();
 		CouleurPiece couleur = Piece.getCouleur(piece);
 		
-		for (int deplacement : DEPLACEMENTS) {
-			int to = Piece.positionTAB120(deplacement, position);
+		for (int i = 0; i < DEPLACEMENTS.length; i++) {
+			int to = Piece.positionTAB120(DEPLACEMENTS[i], position);
 			
 			if((to != -1 && plateau.getCase(to) == 0)
 					|| (to != -1 && Piece.getCouleur(plateau.getCase(to)) != couleur) ) {
@@ -78,7 +78,7 @@ public class Roi extends Piece {
 
 	@Override
 	protected int getValue() {
-		return 20000;
+		return 0;
 	}
 
 	@Override

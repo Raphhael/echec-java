@@ -11,6 +11,7 @@ public class Main extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		Pane pane = new ContainerPane(new Board());
 		Scene scene = new Scene(pane);
+		scene.getStylesheets().add("resources/style.css");
 		primaryStage.setScene(scene);
 		primaryStage.sizeToScene();
 		primaryStage.setTitle("Échec");

@@ -1,5 +1,6 @@
 package raphael.jeu.gui;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import javafx.event.ActionEvent;
@@ -10,8 +11,10 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
-import raphael.algo.Algorithme;
-import raphael.jeu.CouleurPiece;
+import raphael.algo.AlgorithmeException;
+import raphael.algo.Metrique;
+import raphael.algo.structures.Algorithme;
+import raphael.jeu.Constantes;
 import raphael.jeu.Coup;
 import raphael.jeu.Etat;
 import raphael.jeu.ListeDeCoups;
@@ -22,7 +25,7 @@ import raphael.jeu.Plateau;
  * Échéquier avec les cases et boutons
  */
 public class Board extends GridPane {
-	private Etat etat = new Etat();				// Etat du jeu
+	private Etat etat = new Etat(Constantes.START);				// Etat du jeu
 	private Button[] btnListe;					// Cases
 	
 	private boolean    pieceSelectionnee = false;
@@ -36,6 +39,7 @@ public class Board extends GridPane {
 		
 		drawBoard();
 		syncEtat();
+		System.out.println(etat.getFEN());
 	}
 
 	/**
@@ -46,14 +50,17 @@ public class Board extends GridPane {
 			for (int j = 0; j < 8; j++) {
 				int piece = etat.getPlateau().getCase(i * 8 + j);
 				Button btn = btnListe[8 * i + j];
+				btn.getStyleClass().clear();
+				
 				if (piece != 0) {
-					btn.setText(Piece.toSmallString(piece));
-					btn.setTextFill(Piece.getCouleur(piece) == CouleurPiece.NOIR ? Color.BLACK : Color.WHITE);
+					btn.getStyleClass().addAll("case", "case_"+Piece.toFENString(piece));
 				}
 				else
-					btn.setText("");
+					btn.getStyleClass().addAll("case", "case_vide");
 			}
 		}
+		if(etat.threefold())
+			System.out.println("YEAH THREE");
 	}
 	
 	public void precedent() {
@@ -66,21 +73,49 @@ public class Board extends GridPane {
 	
 	/**
 	 * Demander à l'IA de jouer
+	 * 
+	 * @param algo			L'algo à utiliser pour l'IA
+	 * @param profondeur	La profondeur si besoin
+	 * 
+	 * @return le temps d'execution de l'algo
 	 */
 	public double autoPlay(Algorithme algo, int profondeur) {
+//		new Thread(() -> {
+//    		for(int i = 0; i < 20; i++) {
+//	            Platform.runLater(() -> {
+//	    			long t1 = System.currentTimeMillis();
+//	    			etat = (Etat) algo.start(etat, profondeur, etat.getTrait());
+//	    			long t2 = System.currentTimeMillis();
+//	    			System.out.println((((double)(t2 - t1)) / 1000.));
+//	    			syncEtat();
+//	            });
+//	            try {
+//					Thread.sleep(200);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//    		}
+//	    }).start();
+//		return 1.;
 		long t1 = System.currentTimeMillis();
-		etat = (Etat) algo.start(etat, profondeur, etat.getTrait());
+		try {
+			etat = (Etat) algo.initAndRun(etat, profondeur, etat.getTrait());
+		} catch (AlgorithmeException e) {
+			System.err.println("Une erreur est survenue : "
+								+ e.getClass().getSimpleName()
+								+ " -> " + e.getMessage());
+		}
 		long t2 = System.currentTimeMillis();
 		pieceSelectionnee = false;
 		syncEtat();
-		System.out.println("Compteur1 = " + Plateau.compteur1);
-		System.out.println("Compteur2 = " + Plateau.compteur2);
-		System.out.println("CompteurFrom = " + ListeDeCoups.compteurFrom);
-		System.out.println("CompteurTo = " + ListeDeCoups.compteurTo);
 		
-
-//		System.out.println("Calcul1 = " + Etat.calcul1);
-//		System.out.println("Calcul2 = " + Etat.calcul2);
+		/*----- DEBUG -----*/
+		DecimalFormat formatter = new DecimalFormat("0E0");
+		System.out.println("CompteurTo = " + formatter.format(ListeDeCoups.compteurTo));
+		System.out.println("Nb nouveaux plateaux = " + formatter.format(Plateau.metric_1));
+		System.out.println(new Metrique());
+		Metrique.reset();
+		/*----- END DEBUG -----*/
 		
 		return ((double)(t2 - t1)) / 1000.;
 	}
@@ -92,6 +127,7 @@ public class Board extends GridPane {
 				Button btn = btnListe[8 * i + j];
 				btn.setMaxSize(size, size);
 				btn.setMinSize(size, size);
+				btn.getStyleClass().set(0, "case");
 				btn.setStyle(
 						"-fx-font-size: " + (int)(ContainerPane.ZOOM * 30) + "; "
 						+ "-fx-background-color: #" + (((i % 2 == 0 ? 0 : 1) + j) % 2 == 0 ? "bababa" : "6e6e6e") + "; ");
@@ -139,12 +175,8 @@ public class Board extends GridPane {
 					etat = coup.jouer(etat);
 					syncEtat();
 					pieceSelectionnee = false;
-					if(etat.echecEtMat()) {
+					if(etat.echecEtMat())
 						System.out.println("FINI !");
-					}
-					System.out.println("HashCode = " + etat.hash());
-//					autoPlay();
-					// System.out.println("ETAT : " + etat.evaluation());
 				}
 			}
 			if(pieceSelectionnee) { // Mauvais déplacement apres selection
@@ -166,5 +198,10 @@ public class Board extends GridPane {
 	
 	public Etat getEtat() {
 		return etat;
+	}
+	
+	public void setEtat(Etat etat) {
+		this.etat = etat;
+		syncEtat();
 	}
 }

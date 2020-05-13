@@ -21,8 +21,8 @@ public interface Constantes {
 	int		COEF_CONTROLE_CENTRE = 10;
 	
 	// Valeur du roque
-	int		COEF_ROQUER = 100;
-	float	COEF_EMPECHER_ROQUE_ENNEMI = 0.6f; // pourcentage de _ROQUER
+	int		COEF_ROQUER = 70;
+	float	COEF_EMPECHER_ROQUE_ENNEMI = 40; // pourcentage de _ROQUER
 
 	// Forcer la dame à ne pas bouger en début de partie
 	int		COEF_FORCER_DAME = 150;
@@ -84,12 +84,12 @@ public interface Constantes {
 
 	public static final Piece[] PLATEAU_DEFAUT_MANGE = new Piece []	{
 																				new Tour(CouleurPiece.NOIR), new Cavalier(CouleurPiece.NOIR), new Fou(CouleurPiece.NOIR), new Dame(CouleurPiece.NOIR), new Roi(CouleurPiece.NOIR), new Fou(CouleurPiece.NOIR), new Cavalier(CouleurPiece.NOIR), new Tour(CouleurPiece.NOIR),
-																				null, new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR),
+																				null, null, new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR), new Pion(CouleurPiece.NOIR),
 																				null, null, null, null, null, null, null, null, 
 																				null, new Pion(CouleurPiece.NOIR), null, null, null, null, null, null, 
-																				null, null, null, null, null, null, null, null, 
-																				null, null, null, null, null, null, null, null, 
-																				new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC),
+																				null, null, new Pion(CouleurPiece.NOIR), null, null, null, null, null, 
+																				null, null, new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), null, null, null, null, 
+																				new Pion(CouleurPiece.BLANC), null, null, new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC), new Pion(CouleurPiece.BLANC),
 																				new Tour(CouleurPiece.BLANC), new Cavalier(CouleurPiece.BLANC), new Fou(CouleurPiece.BLANC), new Dame(CouleurPiece.BLANC), new Roi(CouleurPiece.BLANC), new Fou(CouleurPiece.BLANC), new Cavalier(CouleurPiece.BLANC), new Tour(CouleurPiece.BLANC)
 																};
 	public static final Piece[] PLATEAU_DEFAUT = new Piece [] {
@@ -123,6 +123,6 @@ public interface Constantes {
 																				new Tour(CouleurPiece.BLANC), new Cavalier(CouleurPiece.BLANC), new Fou(CouleurPiece.BLANC), null, new Roi(CouleurPiece.BLANC), null, null, new Tour(CouleurPiece.BLANC)
 															};
 	
-	
-	
+	public static String START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	public static String C50 = "r1bqk1nr/ppppbppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 5 4";
 }

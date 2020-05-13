@@ -62,4 +62,20 @@ class PieceTest {
 				"Zobriest : 1\n" 
 				, Piece.toString(0b0000000000001__0001__000000__0__1__0__000001));
 	}
+
+	@Test
+	void testToFENStringPiece() {
+		assertEquals("K", Piece.toFENString(0b0000000000001__0001__000000__0__0__0__000001));
+		assertEquals("Q", Piece.toFENString(0b0000000000001__0001__000000__0__0__0__000010));
+		assertEquals("R", Piece.toFENString(0b0000000000001__0001__000000__0__0__0__000100));
+		assertEquals("B", Piece.toFENString(0b0000000000001__0001__000000__0__0__0__001000));
+		assertEquals("N", Piece.toFENString(0b0000000000001__0001__000000__0__0__0__010000));
+		assertEquals("P", Piece.toFENString(0b0000000000001__0001__000000__0__0__0__100000));
+		assertEquals("k", Piece.toFENString(0b0000000000001__0001__000000__0__1__0__000001));
+		assertEquals("q", Piece.toFENString(0b0000000000001__0001__000000__0__1__0__000010));
+		assertEquals("r", Piece.toFENString(0b0000000000001__0001__000000__0__1__0__000100));
+		assertEquals("b", Piece.toFENString(0b0000000000001__0001__000000__0__1__0__001000));
+		assertEquals("n", Piece.toFENString(0b0000000000001__0001__000000__0__1__0__010000));
+		assertEquals("p", Piece.toFENString(0b0000000000001__0001__000000__0__1__0__100000));
+	}
 }

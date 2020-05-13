@@ -19,8 +19,7 @@ public class Plateau {
 	private int			 positionRoiBlanc = -1;	/* Position des rois màj que */
 	private int			 positionRoiNoir = -1;	/* lors d'un coups spécial	 */
 	
-	public static int compteur1 = 0;
-	public static int compteur2 = 0;
+	public static int metric_1 = 0;
 	
 	private long zobristTable[][];
 	private long zobristHash;
@@ -36,7 +35,51 @@ public class Plateau {
 	 * Si on ne lui passe rien il charge un plateau par défaut
 	 */
 	public Plateau() {
-		Piece []pieces = Constantes.PLATEAU_DEFAUT;
+		Piece []pieces = Constantes.PLATEAU_DEFAUT_MANGE;
+		init(pieces);
+	}
+	
+	
+	
+	public Plateau(String fen) {
+		Piece [] pieces = new Piece[64];
+		int row = 7;
+        int col = 0;
+        int index = 0;
+        char ch;
+        
+        while (index < fen.length()) {
+            ch = fen.charAt(index);
+            if (ch == '/') {
+                if (col != 8)
+                    throw new IllegalArgumentException("Malformatted fen string: unexpected '/' found at index " + index);
+                row--;
+                col = 0;
+            } else if (ch >= '1' && ch <= '8') {
+                int num = (int)(ch - '0');
+                if (col + num > 8)
+                    throw new IllegalArgumentException("Malformatted fen string: too many pieces in rank at index " + index + ": " + ch);
+                for (int j = 0; j < num; j++) {
+                	pieces[col + 8 * (7 - row)] = null;
+                    col++;
+                }
+            } else {
+                Piece piece = Piece.toFENPiece(ch);
+                if (piece == null)
+                    throw new IllegalArgumentException("Malformatted fen string: illegal piece char: " + ch);
+                pieces[8 * (7 - row) + col] = piece;
+                col++;
+            }
+            index++;
+        }
+        if (row != 0 || col != 8)
+            throw new IllegalArgumentException("Malformatted fen string: missing pieces at index: " + index);
+	
+        init(pieces);
+	}
+
+	
+	public void init(Piece[] pieces) {
 		cases = new int[pieces.length];
 		
 		zobristTable = new long[64][12];
@@ -54,6 +97,8 @@ public class Plateau {
 		System.out.println("Code = " + zobristHash);
 	}
 	
+	
+	
 	/*
 	 * Équivalent au clone() mais plus souple
 	 * 
@@ -69,8 +114,9 @@ public class Plateau {
 		
 		this.zobristHash = plateau.zobristHash;
 		this.zobristTable = plateau.zobristTable;
+		++metric_1;
 	}
-	
+
 	
 	/**
 	 * 
@@ -219,19 +265,20 @@ public class Plateau {
 	public long getZobristHash() {   return zobristHash; }
 	public void setZobristHash(long hash) { zobristHash = hash;	}
 
-	public ListeDeCoups getListeDeCoupNoirs(boolean deep) {
-		return deep ? listeCoupsNoirs : listeCoupsNoirsNoDeep;
+	public ListeDeCoups getListeDeCoups(CouleurPiece couleur, boolean deep) {
+		return couleur == CouleurPiece.BLANC ?
+				(deep ? listeCoupsBlancs : listeCoupsBlancsNoDeep)
+				: (deep ? listeCoupsNoirs : listeCoupsNoirsNoDeep);
 	}
-	public ListeDeCoups getListeDeCoupBlancs(boolean deep) {
-		return deep ? listeCoupsBlancs : listeCoupsBlancsNoDeep;
-	}
-	public void setListeDeCoupNoirs(ListeDeCoups liste, boolean deep) {
-		if(deep)	listeCoupsNoirs = liste;
-		else		listeCoupsNoirsNoDeep = liste;
-	}
-	public void setListeDeCoupBlancs(ListeDeCoups liste, boolean deep) {
-		if(deep)	listeCoupsBlancs = liste;
-		else		listeCoupsBlancsNoDeep = liste;
+	
+	public void setListeDeCoups(ListeDeCoups liste, boolean deep, CouleurPiece couleur) {
+		if(couleur == CouleurPiece.BLANC) {
+			if(deep)	listeCoupsBlancs = liste;
+			else		listeCoupsBlancsNoDeep = liste;
+		} else {
+			if(deep)	listeCoupsNoirs = liste;
+			else		listeCoupsNoirsNoDeep = liste;
+		}
 	}
 	
 	public Etat getEtat() {	return etat; }
@@ -269,6 +316,38 @@ public class Plateau {
 		if(cases[i] != 0)
 			zobristXOR(i);
 		cases[i] = 0;
+	}
+	
+	public String getFEN() {
+		StringBuilder sb = new StringBuilder(64);
+        int counter = 0;
+        for (int i = 0; i < cases.length; i++) {
+        	int piece = cases[i];
+            if (piece != 0) {
+                if (counter != 0) { //empty the counter before each piece
+                    sb.append(counter);
+                    counter = 0;
+                }
+                sb.append(Piece.toFENString(piece));
+            } else {
+                counter++;
+            }
+            if (Utilitaire.indexToColumn(i) >= 7) {
+                if (counter > 0) { //empty the counter before each rank
+                    sb.append(counter);
+                    counter = 0;
+                }
+                if (Utilitaire.indexToRow(i) < 7) {
+                    sb.append("/");
+                }
+            }
+        }
+        return sb.toString();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof Plateau && ((Plateau) obj).zobristHash == zobristHash;
 	}
 
 	

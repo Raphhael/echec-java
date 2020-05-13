@@ -1,53 +1,40 @@
 package raphael.algo;
 
-import java.util.List;
+import raphael.algo.structures.Algorithme;
+import raphael.algo.structures.ListeDeNoeuds;
+import raphael.algo.structures.Noeud;
 
-public class Minimax implements Algorithme {
-	private static Noeud bon;
-	private static Joueur joueur;
-	private static int profOri;
-	private static int calc = 0;
+/**
+ * Algo minimax basique
+ */
+public class Minimax extends Algorithme {
 
-	public Noeud start(Noeud noeud, int profondeur, Joueur joueur) {
-		Minimax.joueur = joueur;
-		profOri = profondeur;
-		Noeud best = miniMax(noeud, profondeur, true);
-		System.out.println("Meilleur score : " + best.evaluation(joueur));
-		System.out.println("calc " + calc + " successeurs()");
-		return bon;
+	public Noeud start(Noeud noeud, int profondeur) {
+		Noeud meilleurNoeud = null;
+
+		for (Noeud fils : noeud.successeurs())
+			if(meilleurNoeud == null || miniMax(fils, profondeur - 1, false) > meilleurNoeud.evaluation(getJoueur()))
+				meilleurNoeud = fils;
+
+		return meilleurNoeud;
 	}
-	private static Noeud miniMax(Noeud noeud, int profondeur, boolean estMax) {
-		if(profondeur == 0 || noeud.estTerminal())
-			return noeud;
-		calc++;
+
+	private int miniMax(Noeud noeud, int profondeur, boolean estMax) {
+		if(stopCondition(noeud, profondeur))
+			return noeud.evaluation(getJoueur());
 		
-
-		List<Noeud> successeurs = noeud.successeurs();
-		if(successeurs.size() <= 1)
-			return successeurs.get(0);
+		ListeDeNoeuds<?> successeurs = noeud.successeurs();
+		int              currentValue = estMax ? Constantes.MOINS_INFINI : Constantes.PLUS_INFINI;
 		
-		if(estMax) {
-			Noeud maximum = new Noeud.NoeudMin();
-			for (Noeud fils : successeurs) {
-				Noeud noeudRemonte = miniMax(fils, profondeur - 1, false);
-
-				if(maximum.evaluation(joueur) < noeudRemonte.evaluation(joueur)) {
-					maximum = noeudRemonte;
-					if(profOri == profondeur)
-						bon = fils;
-				}
-			}
-			return maximum;
-		}
-		else {
-			Noeud minimum = new Noeud.NoeudMax();
-			for (Noeud fils : successeurs) {
-				Noeud noeudRemonte = miniMax(fils, profondeur - 1, true);
-
-				if(minimum.evaluation(joueur) > noeudRemonte.evaluation(joueur))
-					minimum = noeudRemonte;
-			}
-			return minimum;
-		}
+		if(estMax)
+			for (Noeud fils : successeurs)
+				currentValue = Math.max(currentValue,
+										miniMax(fils, profondeur - 1, false));
+		else
+			for (Noeud fils : successeurs)
+				currentValue = Math.min(currentValue,
+										miniMax(fils, profondeur - 1, true));
+		
+		return currentValue;
 	}
 }

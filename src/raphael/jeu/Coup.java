@@ -1,5 +1,7 @@
 package raphael.jeu;
 
+import raphael.jeu.pieces.Dame;
+
 /**
  * Un coup est défini par
  * <ul> <li>Position de départ (from)</li>
@@ -43,6 +45,9 @@ public class Coup {
 	 * si un coup est valide ...
 	 */
 	public boolean isValid(Etat etat) {
+		if(etat.getPlateau().getPositionRoi(etat.getTrait().oppose()) == to)
+			return false;
+		
 		if(typeCoup != TypeCoup.NORMAL)
 			return jouer(etat) != etat;
 		
@@ -50,16 +55,16 @@ public class Coup {
 		
 		int sauvFrom = plateau.getCase(from);
 		int sauvTo = plateau.getCase(to);
-		ListeDeCoups sauvCoups = plateau.getListeDeCoupBlancs(false);
-		plateau.setListeDeCoupBlancs(null, false);
-		
+		ListeDeCoups sauvCoups = plateau.getListeDeCoups(etat.getTrait().oppose(), false);
+		plateau.setListeDeCoups(null, false, etat.getTrait().oppose());
+				
 		plateau.removeCase(from);
 		plateau.setCase(to, sauvFrom);
 		
+		boolean res = !plateau.enEchec(Piece.getCouleur(sauvFrom));
 		
-		boolean res = plateau.enEchec(Piece.getCouleur(sauvFrom)) ? false : true;
+		plateau.setListeDeCoups(sauvCoups, false, etat.getTrait().oppose());
 		
-		plateau.setListeDeCoupBlancs(sauvCoups, false);
 		plateau.setCase(from, sauvFrom);
 		
 		if(sauvTo != 0)	plateau.setCase(to, sauvTo);
@@ -107,6 +112,10 @@ public class Coup {
 					nouvelEtat.annulerGrandRoqueNoir();
 				}
 				jouerNormalement(nouvelEtat);
+				break;
+			case PION_DAME:
+				nouvelEtat.getPlateau().setCase(to, Piece.makePiece(new Dame(nouvelEtat.getTrait())));
+				nouvelEtat.getPlateau().removeCase(from);
 				break;
 			case NORMAL:
 				jouerNormalement(nouvelEtat);
@@ -161,7 +170,8 @@ public class Coup {
 		ROQUE_PETIT_BLANC,
 		ROQUE_GRAND_BLANC,
 		ROQUE_PETIT_NOIR,
-		ROQUE_GRAND_NOIR
+		ROQUE_GRAND_NOIR,
+		PION_DAME
 	}
 	
 	public boolean is(TypeCoup typeCoup) {

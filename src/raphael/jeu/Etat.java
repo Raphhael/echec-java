@@ -3,8 +3,9 @@ package raphael.jeu;
 import java.util.ArrayList;
 import java.util.List;
 
-import raphael.algo.Joueur;
-import raphael.algo.Noeud;
+import raphael.algo.structures.Joueur;
+import raphael.algo.structures.ListeDeNoeuds;
+import raphael.algo.structures.Noeud;
 import raphael.jeu.Coup.TypeCoup;
 
 /**
@@ -37,12 +38,14 @@ public class Etat implements Noeud {
 	private Coup 	coupPrecedent;
 	private Etat	etatPrecedent;
 
-	private boolean	evaluationCalculee;	/* Si deja calculée, on la stocke	*/
-	private int		evaluationValue;	/* afin de ne pas la recalculer		*/
-	
-	public static int calcul1 = 0;
-	public static int calcul2 = 0;
-	
+	private boolean	evaluationNoireCalculee;	/* Si deja calculée, on la stocke	*/
+	private int		evaluationNoireValue;	/* afin de ne pas la recalculer		*/
+	private boolean	evaluationBlancheCalculee;	/* Si deja calculée, on la stocke	*/
+	private int		evaluationBlancheValue;	/* afin de ne pas la recalculer		*/
+	private boolean	pieceBalanceCalculee;
+	private int		sommePiecesBlanches;
+	private int		sommePiecesNoires;
+		
 	/****************** Constructeurs *****************/
 	
 	/**
@@ -50,21 +53,57 @@ public class Etat implements Noeud {
 	 */
 	public Etat() {
 		this(new Plateau(), Constantes.COULEUR_DEFAUT);
+		this.petitRoqueBlanc = true;
+		this.petitRoqueNoir  = true;
+		this.grandRoqueBlanc = true;
+		this.grandRoqueNoir  = true;
 		plateau.zobristXOR(GRB);
 		plateau.zobristXOR(GRN);
 		plateau.zobristXOR(PRB);
 		plateau.zobristXOR(PRN);
 		plateau.zobristXOR(TRAIT);
-		this.petitRoqueBlanc = true;
-		this.petitRoqueNoir  = true;
-		this.grandRoqueBlanc = true;
-		this.grandRoqueNoir  = true;
 	}
 	
 	public Etat(Plateau plateau, CouleurPiece couleur) {
 		this.trait = couleur;
 		this.plateau = plateau;
 		this.plateau.setEtat(this);
+	}
+	
+	public Etat(String fen) {
+    	String[] chunks = fen.split(" ");
+    	
+    	plateau = new Plateau(chunks[0]);
+		this.plateau.setEtat(this);
+    	
+    	if      (chunks[1].equals("w")) trait = CouleurPiece.BLANC;
+        else if (chunks[1].equals("b")) trait = CouleurPiece.NOIR;
+        else
+            throw new IllegalArgumentException("Malformatted fen string: expected 'to play' as second field but found ");
+    	
+    	
+    	if (chunks[2].equals("-")) {
+    		petitRoqueBlanc = false;
+    		grandRoqueBlanc = false;
+    		petitRoqueNoir = false;
+    		grandRoqueNoir = false;
+    	}
+    	else {
+    		for (int i = 0; i < chunks[2].length(); i++) {
+				char c = chunks[2].charAt(i);
+				switch(c) {
+				case 'K': petitRoqueBlanc = true;
+				case 'Q': grandRoqueBlanc = true;
+				case 'k': petitRoqueNoir = true;
+				case 'q': grandRoqueNoir = true;
+				}
+			}
+    	}
+		plateau.zobristXOR(GRB);
+		plateau.zobristXOR(GRN);
+		plateau.zobristXOR(PRB);
+		plateau.zobristXOR(PRN);
+		plateau.zobristXOR(TRAIT);
 	}
 	
 	/**
@@ -104,6 +143,28 @@ public class Etat implements Noeud {
 		return enEchec() && plateau.calculerCoups(trait, true).isEmpty();
 	}
 	
+	public boolean pat() {
+		return !enEchec() && plateau.calculerCoups(trait, true).isEmpty();
+	}
+	
+	public boolean threefold() {
+		Etat ancien = this;
+		int allerRetoursComplets = 0;
+		int i = 0;
+		while(allerRetoursComplets < 4) {
+			if(ancien.coupPrecedent == null)
+				return false;
+			if(i++ % 4 == 0) {
+				allerRetoursComplets++;
+				if(!ancien.getPlateau().equals(this.getPlateau()))
+					return false;
+			}
+			ancien = ancien.etatPrecedent;
+			
+		}
+		return true;
+	}
+	
 	/**
 	 * Calcule la liste des coups précédents qui ont menés jusqu'ici.
 	 * 
@@ -112,10 +173,10 @@ public class Etat implements Noeud {
 	public List<Coup> coupsPrecedents() {
 		Etat ancien = this;
 		List<Coup> liste = new ArrayList<>();
-		do {
+		while (ancien.coupPrecedent != null) {
 			liste.add(ancien.coupPrecedent);
 			ancien = ancien.etatPrecedent;
-		} while (ancien.coupPrecedent != null);
+		} 
 		return liste;
 	}
 
@@ -157,10 +218,11 @@ public class Etat implements Noeud {
 
 	
 	/****** Implémentation des méthodes de Noeud *******/
-
+	
+	
 	@Override
-	public List<Noeud> successeurs() {
-		List<Noeud> succ = new ArrayList<Noeud>();
+	public ListeDeNoeuds<Etat> successeurs() {
+		ListeDeNoeuds<Etat> succ = new ListeDEtats();
 		ListeDeCoups liste = plateau.calculerCoups(trait, true);
 		
 		for (int i = 0, max = liste.size(); i < max; i++) {
@@ -170,111 +232,258 @@ public class Etat implements Noeud {
 		}
 		return succ;
 	}
+	
+	@Override
+	public Noeud parent() {
+		return etatPrecedent;
+	}
+	
 
 	@Override
 	public boolean estTerminal() {
-		return echecEtMat();
+		getPieceBalance(CouleurPiece.BLANC);
+		return echecEtMat()
+				|| threefold()
+				|| (sommePiecesBlanches < 450 && sommePiecesNoires < 450)
+				|| pat();
+	}
+	
+	public void calcPieceBalance() {
+		if(pieceBalanceCalculee) return;
+		int max = plateau.getCases().length;
+		
+		for (int i = 0; i < max; i++) {
+			int piece = plateau.getCase(i);
+			if(piece == 0)
+				continue;
+			else if(Piece.getCouleur(piece) == CouleurPiece.BLANC)
+				sommePiecesBlanches += Piece.getEvalValue(piece);
+			else
+				sommePiecesNoires += Piece.getEvalValue(piece);
+		}
+		pieceBalanceCalculee = true;
+	}
+	
+	public int getPieceBalance(CouleurPiece joueur) {
+		if(!pieceBalanceCalculee)
+			calcPieceBalance();
+		
+		return CouleurPiece.BLANC == joueur ?
+				sommePiecesBlanches - sommePiecesNoires
+				: sommePiecesNoires - sommePiecesBlanches;
 	}
 
 	@Override
 	public int evaluation(Joueur joueur) {
+
+		if(evaluationBlancheCalculee && joueur == CouleurPiece.BLANC)
+			return evaluationBlancheValue;
+		else if(evaluationNoireCalculee && joueur == CouleurPiece.NOIR)
+			return evaluationNoireValue;
 		
-		if(evaluationCalculee)
-			return evaluationValue;
-		else
-			evaluationCalculee = true;
-		
-		/**** Avantage des pièces ********/
-		for (int i = 0; i < plateau.getCases().length; i++) {
-			int piece = plateau.getCase(i);
-			if(piece == 0)
-				continue;
-			if(Piece.getCouleur(piece) == joueur)
-				evaluationValue += Piece.getEvalValue(piece);
-			else
-				evaluationValue -= Piece.getEvalValue(piece);
-		}
+		int total = 0;
 		
 		/* Initialisation des vars */
 		CouleurPiece maCouleur = (CouleurPiece) joueur;
 		ListeDeCoups coupsAdv = plateau.calculerCoups(maCouleur.oppose(), false);
 		ListeDeCoups coupsPerso = plateau.calculerCoups(maCouleur, false);
+		int coupsPersoLen = coupsPerso.size();
+		int coupsAdvLen = coupsAdv.size();
 		int avancement = getNumeroDeCoup();
+		boolean debutJeu = avancement < 15;
+		boolean finJeu = avancement > 20;
 		
+//		if(debutJeu) {
+		int q = 0;
+		for(int i = 0; i < 64 && q <= 9; i++)
+			if(plateau.getCase(i) != 0)
+				q++;
+
+		debutJeu = debutJeu && q > 8;
+		finJeu = finJeu || q < 7;
+//		}
+		
+		if(echecEtMat()) {
+			int ret = trait == maCouleur ? -99999 : 99999;
+			for (Coup coup : coupsPrecedents()) {
+				System.out.print(coup.toString() + " - ");
+			}
+			System.out.println("enleve " + 10 * avancement + " -> " + getFEN() + "(" + (ret - 10 * avancement)+ ")");
+			ret -= 10 * avancement;
+			return ret;
+		}
+		if(threefold()) {
+			int ret = getPieceBalance(maCouleur) > 0 ? -99999 : 99999;
+			ret -= 10 * avancement;
+			return ret;
+		}
+		if(pat()) {
+			int ret = getPieceBalance(maCouleur) > 0 ? -99999 : 99999;
+			ret -= 10 * avancement;
+			return ret;
+		}
+
+		/**** Avantage des pièces ********/
+		total += getPieceBalance(maCouleur);
+		
+		/**** Tactique fin de jeu ****/
+		if(finJeu) {
+			if(getPieceBalance(maCouleur) > 400)
+				/**** Mettre le roi dans un coin [0; 56] ****/
+				total +=
+					7 * Math.abs(3 - Utilitaire.indexToRow(plateau.getPositionRoi(maCouleur.oppose())))
+					+ 7 * Math.abs(3 - Utilitaire.indexToColumn(plateau.getPositionRoi(maCouleur.oppose())));
+			
+			/**** Accentuer ce parametre ***/
+			total += coupsPersoLen - coupsAdvLen;
+			
+		}
 		
 		/**** Avantage lorsqu'on a plus de choix de coups [-15; 15]********/
-		evaluationValue = coupsPerso.size() - coupsAdv.size();
+		total += coupsPersoLen - coupsAdvLen;
 		
 		
 		/**** Avancer en début de game [2; 15]********/
-		if(avancement < 15) {
-			for (int i = 0; i < coupsPerso.size(); i++) {
+		if(debutJeu) {
+			for (int i = 0; i < coupsPersoLen; i++) {
 				Coup coup = coupsPerso.get(i);
 				if(maCouleur == CouleurPiece.BLANC && coup.getFrom() > coup.getTo()) 
-					evaluationValue += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
+					total += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
 				if(maCouleur == CouleurPiece.NOIR && coup.getFrom() < coup.getTo()) 
-					evaluationValue += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
+					total += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
 			}
 		}
-		
+
 		/*** Controle du centre si début de game [+-100] ***/
-		if(avancement < 15) {
+		if(debutJeu) {
 			//cases du centre : 27, 28, 35, 36
-			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
-			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(28, maCouleur) - plateau.nbDAttaques(28, maCouleur.oppose()));
-			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(35, maCouleur) - plateau.nbDAttaques(35, maCouleur.oppose()));
-			evaluationValue += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(36, maCouleur) - plateau.nbDAttaques(36, maCouleur.oppose()));
+			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
+			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(28, maCouleur) - plateau.nbDAttaques(28, maCouleur.oppose()));
+			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(35, maCouleur) - plateau.nbDAttaques(35, maCouleur.oppose()));
+			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(36, maCouleur) - plateau.nbDAttaques(36, maCouleur.oppose()));
 		}
 		
 		/*** Importance du roque en début de game [-60; 100]***/
-		if(avancement < 20) {
-			byte finiRoque = 0x00;
-			List<Coup> coupsPrecedents = coupsPrecedents();
-			
-			for (int i = 0; i < coupsPrecedents.size() && finiRoque < 0x02; i++) {
-				Coup coup = coupsPrecedents.get(i);
-				if(coup.is(TypeCoup.ROQUE_PETIT_BLANC) || coup.is(TypeCoup.ROQUE_GRAND_BLANC)) {
-					evaluationValue += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.BLANC ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
-					finiRoque ++;
-				}
-				if(coup.is(TypeCoup.ROQUE_PETIT_NOIR) || coup.is(TypeCoup.ROQUE_GRAND_NOIR)) {
-					evaluationValue += Constantes.COEF_ROQUER * (maCouleur == CouleurPiece.NOIR ? 1 : -Constantes.COEF_EMPECHER_ROQUE_ENNEMI);
-					finiRoque ++;
-				}
+		if(debutJeu) {
+			if(maCouleur == CouleurPiece.BLANC) {
+				if(petitRoqueNoir || grandRoqueNoir)
+					total -= Constantes.COEF_EMPECHER_ROQUE_ENNEMI;
+				if(petitRoqueBlanc || grandRoqueBlanc)
+					total += Constantes.COEF_ROQUER;
+			}
+			else if(maCouleur == CouleurPiece.NOIR) {
+				if(petitRoqueNoir || grandRoqueNoir)
+					total += Constantes.COEF_ROQUER;
+				if(petitRoqueBlanc || grandRoqueBlanc)
+					total -= Constantes.COEF_EMPECHER_ROQUE_ENNEMI;
 			}
 		}
 		
-		/*** Pas bouger la dame en début de game***/
-		if(avancement < 16) {
-			boolean dameBlanche = (2 & plateau.getCase(59)) == 1 && Piece.getCouleur(plateau.getCase(59)) == CouleurPiece.BLANC;
-			boolean dameNoire = (2 & plateau.getCase(3)) == 1 && Piece.getCouleur(plateau.getCase(3)) == CouleurPiece.NOIR;
+		/*** Pas bouger la dame en début de game ***/
+		if(debutJeu) {
+			boolean dameBlanche = (0x2F & plateau.getCase(59)) == 1 && Piece.getCouleur(plateau.getCase(59)) == CouleurPiece.BLANC;
+			boolean dameNoire = (0x2F & plateau.getCase(3)) == 1 && Piece.getCouleur(plateau.getCase(3)) == CouleurPiece.NOIR;
 			if(maCouleur == CouleurPiece.NOIR) {
-				evaluationValue += Constantes.COEF_FORCER_DAME * (dameNoire ? 1 : -1);
-				evaluationValue += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameBlanche ? -1 : 1);
+				total += Constantes.COEF_FORCER_DAME * (dameNoire ? 1 : -1);
+				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameBlanche ? -1 : 1);
 			}
 			else {
-				evaluationValue += Constantes.COEF_FORCER_DAME * (dameBlanche ? 1 : -1);
-				evaluationValue += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameNoire ? -1 : 1);
+				total += Constantes.COEF_FORCER_DAME * (dameBlanche ? 1 : -1);
+				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameNoire ? -1 : 1);
 			}
 		}
 		
-		
-		/*** Pas de fous devant les pions centraux ***/
-		// TODO : fous devant pions centraux
-		
-		
-		return evaluationValue;
+		/***
+		 * Début : Pas de fous devant les pions centraux
+		 * Tout le temps : Attention pion dame
+		 * ***/
+		for(int i = 8; i < 16; i++) {
+			if(maCouleur == CouleurPiece.NOIR) {
+				if(	(0x2F & plateau.getCase(i)) == 32) {  // si pion
+					if(Piece.getCouleur(plateau.getCase(i)) == CouleurPiece.NOIR) {
+						// si pion noir et fou noir au dessous
+						if(debutJeu && (0x2F & plateau.getCase(i + 8)) == 8 && Piece.getCouleur(plateau.getCase(i + 8)) == CouleurPiece.NOIR) {
+							total -= 40;
+						}
+					}
+					else { // C'est un pion blanc
+						total -= 200;
+					}
+				}
+			}
+			else {
+				// si pion blanc
+				if(	(0x2F & plateau.getCase(i)) == 32 && Piece.getCouleur(plateau.getCase(i)) == CouleurPiece.BLANC)  
+					total += 100;
+			}
+		}
+		for(int i = 40; i < 48; i++) {
+			if(maCouleur == CouleurPiece.BLANC) {
+				if(	(0x2F & plateau.getCase(i+8)) == 32) {  // si pion
+					if(Piece.getCouleur(plateau.getCase(i+8)) == CouleurPiece.BLANC) {
+						// si pion blanc et fou blanc au dessus
+						if(debutJeu && (0x2F & plateau.getCase(i)) == 8 && Piece.getCouleur(plateau.getCase(i)) == CouleurPiece.BLANC)
+							total -= 40;
+					}
+					else { // C'est un pion noir
+						total -= 200;
+					}
+				}
+			}
+			else {
+				// si pion noir
+				if(	(0x2F & plateau.getCase(i)) == 32 && Piece.getCouleur(plateau.getCase(i)) == CouleurPiece.BLANC)  
+					total += 100;
+			}
+		}
+
+		if(joueur == CouleurPiece.BLANC) {
+			evaluationBlancheValue = total;
+			evaluationBlancheCalculee = true;
+		}
+		else if(joueur == CouleurPiece.NOIR) {
+			evaluationNoireValue = total;
+			evaluationNoireCalculee = true;
+		}
+		return total;
 	}
 
 	
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("Plateau : ").append(System.lineSeparator())
-		  .append(plateau.toString())
-		  .append("Trait :  ").append(trait.name());
-		return sb.toString();
+		return coupPrecedent == null ? "null" : coupPrecedent.toString();
+//		StringBuffer sb = new StringBuffer();
+//		sb.append("Plateau : ").append(System.lineSeparator())
+//		  .append(plateau.toString())
+//		  .append("Trait :  ").append(trait.name());
+//		return sb.toString();
 	}
+	
+	public String print() {
+		if(getCoupPrecedent() != null)
+			return getCoupPrecedent().toString();
+		return "";
+	}
+	
+    public String getFEN() {
+    	StringBuffer sb = new StringBuffer(plateau.getFEN());
+    	sb.append(' ').append(trait == CouleurPiece.BLANC ? 'w' : 'b');
+    	
+    	sb.append(' ');
+    	if(!petitRoqueBlanc && !grandRoqueBlanc && 
+		   !petitRoqueNoir && !grandRoqueNoir)
+    		sb.append("-");
+    	else {
+    		if(petitRoqueBlanc) sb.append("K");
+    		if(grandRoqueBlanc) sb.append("Q");
+    		if(petitRoqueNoir) sb.append("k");
+    		if(grandRoqueBlanc) sb.append("q");
+    	}
+        sb.append(" - 0 1");
+    	
+    	return sb.toString();
+    }
+
 
 	@Override
 	public long hash() {

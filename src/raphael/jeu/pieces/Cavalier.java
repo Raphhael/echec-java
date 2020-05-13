@@ -16,8 +16,8 @@ public class Cavalier extends Piece {
 	public static ListeDeCoups listeCoups(Plateau plateau, int position, int piece) {
 		ListeDeCoups liste = new ListeDeCoups();		
 		
-		for (int deplacement : DEPLACEMENTS) {
-			int to = positionTAB120(deplacement, position);
+		for (int i = 0; i < DEPLACEMENTS.length; i++) {
+			int to = positionTAB120(DEPLACEMENTS[i], position);
 
 			if((to != -1 && plateau.getCase(to) == 0) 
 					|| (to != -1 && Piece.getCouleur(plateau.getCase(to)) != Piece.getCouleur(piece)))
