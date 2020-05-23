@@ -9,7 +9,7 @@ import raphael.algo.structures.Noeud;
  */
 public class AlphaBeta extends Algorithme {
 	
-	public Noeud start(Noeud noeud, int profondeurMax, int alpha, int beta) {
+	public Noeud start(Noeud noeud, int alpha, int beta) {
 		ListeDeNoeuds<?> successeurs;
 		Noeud            meilleurNoeud = null;
 		int              currentValue  = Constantes.MOINS_INFINI;
@@ -18,7 +18,7 @@ public class AlphaBeta extends Algorithme {
 
 		for (int i = 0; i < successeurs.size(); i++) {
 			Noeud fils = successeurs.get(i);
-			int   ab   = alphaBeta(fils, profondeurMax - 1, false, alpha, beta);
+			int   ab   = alphaBeta(fils, getProfondeurMax() - 1, false, alpha, beta);
 			
 			if (ab > currentValue || meilleurNoeud == null) {
 				currentValue = ab;
@@ -40,8 +40,8 @@ public class AlphaBeta extends Algorithme {
 	 * le meilleur coup.
 	 */
 	@Override
-	public Noeud start(Noeud noeud, int profondeur)  throws AlgorithmeException {
-		return start(noeud, profondeur, Constantes.MOINS_INFINI, Constantes.PLUS_INFINI);
+	public Noeud start(Noeud noeud) throws AlgorithmeException {
+		return start(noeud, Constantes.MOINS_INFINI, Constantes.PLUS_INFINI);
 	}
 
 	public int alphaBeta(Noeud noeud, int profondeur, boolean estMax, int alpha, int beta) {

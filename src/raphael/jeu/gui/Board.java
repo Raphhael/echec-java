@@ -1,6 +1,5 @@
 package raphael.jeu.gui;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 import javafx.event.ActionEvent;
@@ -39,7 +38,6 @@ public class Board extends GridPane {
 		
 		drawBoard();
 		syncEtat();
-		System.out.println(etat.getFEN());
 	}
 
 	/**
@@ -59,8 +57,6 @@ public class Board extends GridPane {
 					btn.getStyleClass().addAll("case", "case_vide");
 			}
 		}
-		if(etat.threefold())
-			System.out.println("YEAH THREE");
 	}
 	
 	public void precedent() {
@@ -79,7 +75,7 @@ public class Board extends GridPane {
 	 * 
 	 * @return le temps d'execution de l'algo
 	 */
-	public double autoPlay(Algorithme algo, int profondeur) {
+	public double autoPlay(Algorithme algo) {
 //		new Thread(() -> {
 //    		for(int i = 0; i < 20; i++) {
 //	            Platform.runLater(() -> {
@@ -99,7 +95,7 @@ public class Board extends GridPane {
 //		return 1.;
 		long t1 = System.currentTimeMillis();
 		try {
-			etat = (Etat) algo.initAndRun(etat, profondeur, etat.getTrait());
+			etat = (Etat) algo.initAndRun(etat);
 		} catch (AlgorithmeException e) {
 			System.err.println("Une erreur est survenue : "
 								+ e.getClass().getSimpleName()
@@ -110,9 +106,8 @@ public class Board extends GridPane {
 		syncEtat();
 		
 		/*----- DEBUG -----*/
-		DecimalFormat formatter = new DecimalFormat("0E0");
-		System.out.println("CompteurTo = " + formatter.format(ListeDeCoups.compteurTo));
-		System.out.println("Nb nouveaux plateaux = " + formatter.format(Plateau.metric_1));
+		System.out.println("CompteurTo = " + ListeDeCoups.compteurTo);
+		System.out.println("Nb nouveaux plateaux = " + Plateau.metric_1);
 		System.out.println(new Metrique());
 		Metrique.reset();
 		/*----- END DEBUG -----*/
@@ -175,7 +170,7 @@ public class Board extends GridPane {
 					etat = coup.jouer(etat);
 					syncEtat();
 					pieceSelectionnee = false;
-					if(etat.echecEtMat())
+					if(etat.estTerminal())
 						System.out.println("FINI !");
 				}
 			}

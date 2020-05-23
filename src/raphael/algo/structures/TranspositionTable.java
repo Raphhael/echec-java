@@ -21,15 +21,21 @@ public class TranspositionTable extends HashMap<Long, TTElement> {
 		}
 	}
 	
+	/**
+	 * Retrouver le meilleur élément à une certaine profondeur.
+	 * 
+	 * @param profondeur
+	 * @return le meilleur élément de la table
+	 */
 	public TTElement retrieveBest(int profondeur) {
 		TTElement best = null;
-		for (TTElement elem : values()) 
+		for (TTElement elem : values()) {
 			if(elem.getProfondeur() == profondeur
 				&& (best == null
-					|| elem.getEvaluation() > best.getEvaluation())) {
-//				System.out.println("ELEM : CHOISI eval=" + elem.getEvaluation() + ", prof="  + elem.getProfondeur());
+					|| elem.getScore() > best.getScore())) {
 				best = elem;
 			}
+		}
 
 		return best;
 	}

@@ -14,10 +14,10 @@ import raphael.algo.structures.TranspositionTable;
 public class AlphaBetaMemory extends Algorithme {
 	private static TranspositionTable transpositionTable = new TranspositionTable();
 
-	public Noeud start(Noeud noeud, int profondeurMax) throws NoMoreChoicesException {
-		alphaBeta(noeud, profondeurMax, true, Constantes.MOINS_INFINI, Constantes.PLUS_INFINI);
+	public Noeud start(Noeud noeud) throws NoMoreChoicesException {
+		alphaBeta(noeud, getProfondeurMax(), true, Constantes.MOINS_INFINI, Constantes.PLUS_INFINI);
 		
-		return findPV(profondeurMax);
+		return findPV(getProfondeurMax());
 	}
 
 	public int alphaBeta(Noeud noeud, int profondeur, boolean estMax, int alpha, int beta) {
@@ -34,14 +34,14 @@ public class AlphaBetaMemory extends Algorithme {
 		if (el != null) {
 			if (el.getProfondeur() >= profondeur) {
 				if (el.getType() == TypeNoeud.EXACT)
-					return el.getEvaluation();
+					return el.getScore();
 				else if (el.getType() == TypeNoeud.ALPHA)
-					alpha = Math.max(alpha, el.getEvaluation());
+					alpha = Math.max(alpha, el.getScore());
 				else if (el.getType() == TypeNoeud.BETA)
-					beta = Math.min(beta, el.getEvaluation());
+					beta = Math.min(beta, el.getScore());
 
 				if (alpha >= beta)
-					return el.getEvaluation();
+					return el.getScore();
 			}
 		}
 
@@ -57,6 +57,7 @@ public class AlphaBetaMemory extends Algorithme {
 					done = true;
 			} else {
 				bestMove     = el.getMove();
+
 				currentValue = alphaBeta(bestMove, profondeur - 1, true, alpha, beta);
 
 				if (currentValue <= alpha)
@@ -71,10 +72,10 @@ public class AlphaBetaMemory extends Algorithme {
 			if (estMax) {
 				for (int i = 0; i < successeurs.size(); i++) {
 					evalNoeud = successeurs.get(i);
-
+					
 					int ab = alphaBeta(evalNoeud, profondeur - 1, false, alpha, beta);
 
-					if (ab >= currentValue) {
+					if (ab > currentValue) {
 						bestMove = evalNoeud;
 						currentValue = ab;
 					}
@@ -87,9 +88,10 @@ public class AlphaBetaMemory extends Algorithme {
 			} else {
 				for (int i = 0; i < successeurs.size(); i++) {
 					evalNoeud = successeurs.get(i);
+
 					int ab = alphaBeta(evalNoeud, profondeur - 1, true, alpha, beta);
 
-					if (ab <= currentValue) {
+					if (ab < currentValue) {
 						bestMove = evalNoeud;
 						currentValue = ab;
 					}

@@ -1,9 +1,10 @@
 package raphael.jeu.pieces;
 
+import java.util.List;
+
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
 import raphael.jeu.Coup.TypeCoup;
-import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
 import raphael.jeu.Plateau;
 import raphael.jeu.Utilitaire;
@@ -14,8 +15,7 @@ public class Pion extends Piece {
 		super(couleur);
 	}
 
-	public static ListeDeCoups listeCoups(Plateau plateau, int position, int piece) {
-		ListeDeCoups liste = new ListeDeCoups();
+	public static List<Coup> listeCoups(Plateau plateau, int position, int piece, List<Coup> liste) {
 		CouleurPiece couleur = Piece.getCouleur(piece);
 		
 		if(couleur == CouleurPiece.BLANC) {
@@ -34,7 +34,7 @@ public class Pion extends Piece {
 		return liste;
 	}
 	
-	private static boolean checkerCase(int deplacement, int position, Plateau plateau, CouleurPiece couleur, ListeDeCoups coups) {
+	private static boolean checkerCase(int deplacement, int position, Plateau plateau, CouleurPiece couleur, List<Coup> coups) {
 		int to = positionTAB120(deplacement, position);
 		if(to != -1 && plateau.getCase(to) == 0) {
 			if(
@@ -49,7 +49,7 @@ public class Pion extends Piece {
 		return false;
 	}
 	
-	private static void mangerDiagonale(int deplacement, int position, Plateau plateau, CouleurPiece couleur, ListeDeCoups coups) {
+	private static void mangerDiagonale(int deplacement, int position, Plateau plateau, CouleurPiece couleur, List<Coup> coups) {
 		int to = positionTAB120(deplacement, position);
 		if(		to != -1 
 				&& plateau.getCase(to) != 0 

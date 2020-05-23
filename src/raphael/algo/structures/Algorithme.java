@@ -17,19 +17,35 @@ public abstract class Algorithme {
 	 * Joueur à maximiser
 	 */
 	private Joueur joueur;
-
+	
+	/**
+	 * Profondeur max pour la recherche
+	 */
+	static private int profondeur_max = 1;
+	
+	/**
+	 * Temps maximal en secondes
+	 */
+	static private int max_time = 10_000;
 	
 	/**
 	 * Réalise quelques opérations et vérifications nécessaires à
 	 * l'algo et le lance
 	 */
+	public Noeud initAndRun(Noeud noeud) throws AlgorithmeException {
+		return initAndRun(noeud, profondeur_max, noeud.getTrait());
+	}
+	
 	public Noeud initAndRun(Noeud noeud, int profondeurMax, Joueur joueur) throws AlgorithmeException {
 		this.joueur = joueur;
+		setProfondeurMax(profondeurMax);
 		start = System.currentTimeMillis();
 		if (stopCondition(noeud, profondeurMax))
 			throw new NoMoreChoicesException();
 		
-		Noeud ret = start(noeud, profondeurMax);
+		initRoutine();
+		
+		Noeud ret = start(noeud);
 		
 		endRoutine();
 		
@@ -43,17 +59,21 @@ public abstract class Algorithme {
 	public void endRoutine() { }
 	
 	/**
+	 * Fonction qui s'exécute après l'algo pour effectuer des
+	 * éventuelles tâches de nettoyage ou autres.
+	 */
+	public void initRoutine() { }
+	
+	/**
 	 * Démarrer la recherche
 	 * 
 	 * @param noeud		 Noeud racine (état courant du jeu)
-	 * @param profondeur Profondeur maximale où aller si nécessaire
-	 * @param joueur	 Joueur à maximiser (l'IA)
 	 * 
 	 * @return Le meilleur état de jeu trouvé
 	 * 
 	 * @throws AlgorithmeException Si une erreur est survenue
 	 */
-	public abstract Noeud start(Noeud noeud, int profondeur) throws AlgorithmeException;
+	public abstract Noeud start(Noeud noeud) throws AlgorithmeException;
 	
 	/**
 	 * Condition d'arrêt
@@ -75,14 +95,52 @@ public abstract class Algorithme {
 	 * @return true s'il ne reste plus de temps, false sinon
 	 */
 	public boolean timesUp() {
-		return start + Constantes.TIMEOUT_MILLIS < System.currentTimeMillis();
+		return start + max_time < System.currentTimeMillis();
 	}
 
 	/**
-	 * 
-	 * @return
+	 * Joueur que dont on souhaite maximiser le score
+	 * @return le joueur
 	 */
 	public Joueur getJoueur() {
 		return joueur;
+	}
+
+	/**
+	 * Profondeur maximale de l'arbre de recherche
+	 * @return la profondeur maximale
+	 */
+	public int getProfondeurMax() {
+		return profondeur_max;
+	}
+
+	/**
+	 * Profondeur maximale de l'arbre de recherche
+	 * @return la profondeur maximale
+	 */
+	public static int setProfondeurMax(int nouvelle_profondeur) {
+		if(nouvelle_profondeur < Constantes.PROFONDEUR_MIN)
+			profondeur_max = Constantes.PROFONDEUR_MIN;
+		else if(nouvelle_profondeur > Constantes.PROFONDEUR_MAX)
+			profondeur_max = Constantes.PROFONDEUR_MAX;
+		else
+			profondeur_max = nouvelle_profondeur;
+		
+		return profondeur_max;
+	}
+
+	/**
+	 * Profondeur maximale de l'arbre de recherche
+	 * @return la profondeur maximale
+	 */
+	public static int setExecutionTime(int nouveau_temps_max) {
+		if(nouveau_temps_max < Constantes.PROFONDEUR_MIN)
+			max_time = 1000 * Constantes.EXEC_TIME_MIN;
+		else if(nouveau_temps_max > Constantes.PROFONDEUR_MAX)
+			max_time = 1000 * Constantes.EXEC_TIME_MAX;
+		else
+			max_time = 1000 * nouveau_temps_max;
+		
+		return max_time / 1000;
 	}
 }

@@ -9,9 +9,11 @@ public class ListeDEtats extends ListeDeNoeuds<Etat>{
 	@Override
 	public void sort(Joueur joueur) {
 		this.sort((e1, e2) -> {
-			if(e1.getPieceBalance((CouleurPiece) joueur) > e2.getPieceBalance((CouleurPiece) joueur))
+			int balance_1 = e1.getPieceBalance() * (joueur == CouleurPiece.BLANC ? 1 : -1);
+			int balance_2 = e2.getPieceBalance() * (joueur == CouleurPiece.BLANC ? 1 : -1);
+			if(balance_1 > balance_2)
 				return 1;
-			else if(e1.getPieceBalance((CouleurPiece) joueur) < e2.getPieceBalance((CouleurPiece) joueur))
+			else if(balance_1 < balance_2)
 				return -1;
 			else {
 				int row1 = Math.abs(Utilitaire.indexToRow(e1.getCoupPrecedent().getFrom()));

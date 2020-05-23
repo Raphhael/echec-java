@@ -1,5 +1,7 @@
 package raphael.jeu;
 
+import java.util.List;
+
 import raphael.jeu.pieces.Cavalier;
 import raphael.jeu.pieces.Dame;
 import raphael.jeu.pieces.Fou;
@@ -63,15 +65,15 @@ public abstract class Piece implements Cloneable {
 	 * @param	allerProfond	Si true, execute les appels récursif (estAttaque).
 	 * @return					La liste des coups possible pour cette pièce.
 	 */
-	public	static	ListeDeCoups listeCoups(Plateau plateau, int position, int piece, boolean allerProfond) {
+	public	static	List<Coup> listeCoups(Plateau plateau, int position, int piece, boolean allerProfond, List<Coup> liste) {
 		
 		switch(piece & 63) {
-			case 1: return Roi.listeCoups(plateau, position, piece, allerProfond);
-			case 2: return Dame.listeCoups(plateau, position, piece);
-			case 4: return Tour.listeCoups(plateau, position, piece);
-			case 8: return Fou.listeCoups(plateau, position, piece);
-			case 16: return Cavalier.listeCoups(plateau, position, piece);
-			case 32: return Pion.listeCoups(plateau, position, piece);
+			case 1: return Roi.listeCoups(plateau, position, piece, allerProfond, liste);
+			case 2: return Dame.listeCoups(plateau, position, piece, liste);
+			case 4: return Tour.listeCoups(plateau, position, piece, liste);
+			case 8: return Fou.listeCoups(plateau, position, piece, liste);
+			case 16: return Cavalier.listeCoups(plateau, position, piece, liste);
+			case 32: return Pion.listeCoups(plateau, position, piece, liste);
 			default: return null;
 		}
 	}

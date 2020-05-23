@@ -38,8 +38,6 @@ public class Etat implements Noeud {
 	private Coup 	coupPrecedent;
 	private Etat	etatPrecedent;
 
-	private boolean	evaluationNoireCalculee;	/* Si deja calculée, on la stocke	*/
-	private int		evaluationNoireValue;	/* afin de ne pas la recalculer		*/
 	private boolean	evaluationBlancheCalculee;	/* Si deja calculée, on la stocke	*/
 	private int		evaluationBlancheValue;	/* afin de ne pas la recalculer		*/
 	private boolean	pieceBalanceCalculee;
@@ -223,7 +221,7 @@ public class Etat implements Noeud {
 	@Override
 	public ListeDeNoeuds<Etat> successeurs() {
 		ListeDeNoeuds<Etat> succ = new ListeDEtats();
-		ListeDeCoups liste = plateau.calculerCoups(trait, true);
+		ListeDeCoups liste = plateau.calculerCoups(trait, false);
 		
 		for (int i = 0, max = liste.size(); i < max; i++) {
 			Etat e = liste.get(i).jouer(this);
@@ -241,7 +239,7 @@ public class Etat implements Noeud {
 
 	@Override
 	public boolean estTerminal() {
-		getPieceBalance(CouleurPiece.BLANC);
+		getPieceBalance();
 		return echecEtMat()
 				|| threefold()
 				|| (sommePiecesBlanches < 450 && sommePiecesNoires < 450)
@@ -264,32 +262,59 @@ public class Etat implements Noeud {
 		pieceBalanceCalculee = true;
 	}
 	
+	/**
+	 * Calcule la différence entre les pièces blanches et les pièces noires.
+	 * @return
+	 */
+	public int getPieceBalance() {
+		return getPieceBalance(CouleurPiece.BLANC);
+	}
 	public int getPieceBalance(CouleurPiece joueur) {
 		if(!pieceBalanceCalculee)
 			calcPieceBalance();
 		
-		return CouleurPiece.BLANC == joueur ?
+		return joueur == CouleurPiece.BLANC ? 
 				sommePiecesBlanches - sommePiecesNoires
 				: sommePiecesNoires - sommePiecesBlanches;
 	}
 
 	@Override
 	public int evaluation(Joueur joueur) {
+		int avancement = getNumeroDeCoup();
+		CouleurPiece maCouleur = (CouleurPiece) joueur;
 
-		if(evaluationBlancheCalculee && joueur == CouleurPiece.BLANC)
-			return evaluationBlancheValue;
-		else if(evaluationNoireCalculee && joueur == CouleurPiece.NOIR)
-			return evaluationNoireValue;
+		if(evaluationBlancheCalculee)
+			return evaluationBlancheValue * (joueur == CouleurPiece.BLANC ? 1 : -1);
 		
-		int total = 0;
+		if(echecEtMat()) {
+			if(trait == maCouleur)
+				return -99999 + 50 * avancement;
+			else
+				return 99999 - 50 * avancement;
+		}
+		if(threefold() || pat()) {
+			int ret = 0;
+			if(maCouleur == CouleurPiece.BLANC) {
+				if(getPieceBalance() > 0)
+					ret = -99999 - 50 * avancement;
+				else
+					ret = 99999 + 50 * avancement;
+			}
+			if(maCouleur == CouleurPiece.NOIR) {
+				if(getPieceBalance() < 0)
+					ret = -99999 - 50 * avancement;
+				else
+					ret = 99999 + 50 * avancement;
+			}
+			return ret;
+		}
 		
 		/* Initialisation des vars */
-		CouleurPiece maCouleur = (CouleurPiece) joueur;
-		ListeDeCoups coupsAdv = plateau.calculerCoups(maCouleur.oppose(), false);
-		ListeDeCoups coupsPerso = plateau.calculerCoups(maCouleur, false);
-		int coupsPersoLen = coupsPerso.size();
-		int coupsAdvLen = coupsAdv.size();
-		int avancement = getNumeroDeCoup();
+		ListeDeCoups coupsNoirs = plateau.calculerCoups(CouleurPiece.NOIR, false);
+		ListeDeCoups coupsBlancs = plateau.calculerCoups(CouleurPiece.BLANC, false);
+		int coupsPersoLen = coupsBlancs.size();
+		int coupsAdvLen = coupsNoirs.size();
+		int total = 0;
 		boolean debutJeu = avancement < 15;
 		boolean finJeu = avancement > 20;
 		
@@ -303,39 +328,17 @@ public class Etat implements Noeud {
 		finJeu = finJeu || q < 7;
 //		}
 		
-		if(echecEtMat()) {
-			int ret = trait == maCouleur ? -99999 : 99999;
-			for (Coup coup : coupsPrecedents()) {
-				System.out.print(coup.toString() + " - ");
-			}
-			System.out.println("enleve " + 10 * avancement + " -> " + getFEN() + "(" + (ret - 10 * avancement)+ ")");
-			ret -= 10 * avancement;
-			return ret;
-		}
-		if(threefold()) {
-			int ret = getPieceBalance(maCouleur) > 0 ? -99999 : 99999;
-			ret -= 10 * avancement;
-			return ret;
-		}
-		if(pat()) {
-			int ret = getPieceBalance(maCouleur) > 0 ? -99999 : 99999;
-			ret -= 10 * avancement;
-			return ret;
-		}
 
 		/**** Avantage des pièces ********/
-		total += getPieceBalance(maCouleur);
+		total += getPieceBalance();
 		
 		/**** Tactique fin de jeu ****/
 		if(finJeu) {
 			if(getPieceBalance(maCouleur) > 400)
-				/**** Mettre le roi dans un coin [0; 56] ****/
+				/**** Mettre le roi ennemi dans un coin [0; 56] ****/
 				total +=
-					7 * Math.abs(3 - Utilitaire.indexToRow(plateau.getPositionRoi(maCouleur.oppose())))
-					+ 7 * Math.abs(3 - Utilitaire.indexToColumn(plateau.getPositionRoi(maCouleur.oppose())));
-			
-			/**** Accentuer ce parametre ***/
-			total += coupsPersoLen - coupsAdvLen;
+					9 * Math.abs(3.5 - Utilitaire.indexToRow(plateau.getPositionRoi(maCouleur.oppose())))
+					+ 9 * Math.abs(3.5 - Utilitaire.indexToColumn(plateau.getPositionRoi(maCouleur.oppose())));
 			
 		}
 		
@@ -345,69 +348,66 @@ public class Etat implements Noeud {
 		
 		/**** Avancer en début de game [2; 15]********/
 		if(debutJeu) {
-			for (int i = 0; i < coupsPersoLen; i++) {
-				Coup coup = coupsPerso.get(i);
-				if(maCouleur == CouleurPiece.BLANC && coup.getFrom() > coup.getTo()) 
-					total += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
-				if(maCouleur == CouleurPiece.NOIR && coup.getFrom() < coup.getTo()) 
-					total += Piece.getEvalValue(plateau.getCase(coup.getFrom())) * Constantes.COEF_AVANCEMENT_PIECES;
+			int avanceBlancs = 0, avanceNoirs = 0;
+			for (int i = 0; i < 64; i++) {
+				int piece = plateau.getCase(i);
+				if(piece == 0)
+					continue;
+				if(Piece.getCouleur(piece) == CouleurPiece.BLANC)
+					avanceBlancs += (8 - Utilitaire.indexToRow(i)) * 0.0005 * (700 - Piece.getEvalValue(piece));
+				else
+					avanceNoirs += Utilitaire.indexToRow(i) * 0.0005 * (700 - Piece.getEvalValue(piece));
 			}
+			total += avanceBlancs - avanceNoirs;
 		}
 
 		/*** Controle du centre si début de game [+-100] ***/
 		if(debutJeu) {
 			//cases du centre : 27, 28, 35, 36
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(27, maCouleur) - plateau.nbDAttaques(27, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(28, maCouleur) - plateau.nbDAttaques(28, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(35, maCouleur) - plateau.nbDAttaques(35, maCouleur.oppose()));
-			total += Constantes.COEF_CONTROLE_CENTRE * (plateau.nbDAttaques(36, maCouleur) - plateau.nbDAttaques(36, maCouleur.oppose()));
+			total += 2 * (plateau.nbDAttaques(27, CouleurPiece.BLANC) - plateau.nbDAttaques(27, CouleurPiece.NOIR));
+			total += 2 * (plateau.nbDAttaques(28, CouleurPiece.BLANC) - plateau.nbDAttaques(28, CouleurPiece.NOIR));
+			total += (plateau.nbDAttaques(35, CouleurPiece.BLANC) - 2 * plateau.nbDAttaques(35, CouleurPiece.NOIR));
+			total += (plateau.nbDAttaques(36, CouleurPiece.BLANC) - 2 * plateau.nbDAttaques(36, CouleurPiece.NOIR));
 		}
-		
+
 		/*** Importance du roque en début de game [-60; 100]***/
 		if(debutJeu) {
-			if(maCouleur == CouleurPiece.BLANC) {
-				if(petitRoqueNoir || grandRoqueNoir)
-					total -= Constantes.COEF_EMPECHER_ROQUE_ENNEMI;
-				if(petitRoqueBlanc || grandRoqueBlanc)
-					total += Constantes.COEF_ROQUER;
-			}
-			else if(maCouleur == CouleurPiece.NOIR) {
-				if(petitRoqueNoir || grandRoqueNoir)
-					total += Constantes.COEF_ROQUER;
-				if(petitRoqueBlanc || grandRoqueBlanc)
-					total -= Constantes.COEF_EMPECHER_ROQUE_ENNEMI;
-			}
+			Etat ancien = this;
+			// Si les 2 roques toujours dispo, on ne perd pas de temps avec ça
+			if(!((grandRoqueBlanc || petitRoqueBlanc) && (grandRoqueNoir || petitRoqueNoir)))
+				while (ancien.coupPrecedent != null) {
+					if(ancien.coupPrecedent.is(TypeCoup.ROQUE_GRAND_BLANC) || ancien.coupPrecedent.is(TypeCoup.ROQUE_PETIT_BLANC))
+						total += Constantes.COEF_ROQUER;
+					else if(ancien.coupPrecedent.is(TypeCoup.ROQUE_GRAND_NOIR) || ancien.coupPrecedent.is(TypeCoup.ROQUE_PETIT_NOIR))
+						total -= Constantes.COEF_ROQUER;
+					ancien = ancien.etatPrecedent;
+				}
 		}
 		
 		/*** Pas bouger la dame en début de game ***/
 		if(debutJeu) {
-			boolean dameBlanche = (0x2F & plateau.getCase(59)) == 1 && Piece.getCouleur(plateau.getCase(59)) == CouleurPiece.BLANC;
-			boolean dameNoire = (0x2F & plateau.getCase(3)) == 1 && Piece.getCouleur(plateau.getCase(3)) == CouleurPiece.NOIR;
-			if(maCouleur == CouleurPiece.NOIR) {
-				total += Constantes.COEF_FORCER_DAME * (dameNoire ? 1 : -1);
-				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameBlanche ? -1 : 1);
-			}
-			else {
-				total += Constantes.COEF_FORCER_DAME * (dameBlanche ? 1 : -1);
-				total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameNoire ? -1 : 1);
-			}
+			boolean dameBlanche = (0x2F & plateau.getCase(59)) == 2 && Piece.getCouleur(plateau.getCase(59)) == CouleurPiece.BLANC;
+			boolean dameNoire = (0x2F & plateau.getCase(3)) == 2 && Piece.getCouleur(plateau.getCase(3)) == CouleurPiece.NOIR;
+			total += Constantes.COEF_FORCER_DAME * (dameBlanche ? 1 : -1);
+			total += Constantes.COEF_FORCER_DAME_ENNEMIE_A_BOUGER * (dameNoire ? -1 : 1);
 		}
 		
 		/***
 		 * Début : Pas de fous devant les pions centraux
 		 * Tout le temps : Attention pion dame
-		 * ***/
+		 *
+		 ***/
 		for(int i = 8; i < 16; i++) {
 			if(maCouleur == CouleurPiece.NOIR) {
 				if(	(0x2F & plateau.getCase(i)) == 32) {  // si pion
 					if(Piece.getCouleur(plateau.getCase(i)) == CouleurPiece.NOIR) {
 						// si pion noir et fou noir au dessous
 						if(debutJeu && (0x2F & plateau.getCase(i + 8)) == 8 && Piece.getCouleur(plateau.getCase(i + 8)) == CouleurPiece.NOIR) {
-							total -= 40;
+							total += 4000;
 						}
 					}
 					else { // C'est un pion blanc
-						total -= 200;
+						total += 200;
 					}
 				}
 			}
@@ -423,7 +423,7 @@ public class Etat implements Noeud {
 					if(Piece.getCouleur(plateau.getCase(i+8)) == CouleurPiece.BLANC) {
 						// si pion blanc et fou blanc au dessus
 						if(debutJeu && (0x2F & plateau.getCase(i)) == 8 && Piece.getCouleur(plateau.getCase(i)) == CouleurPiece.BLANC)
-							total -= 40;
+							total -= 4000;
 					}
 					else { // C'est un pion noir
 						total -= 200;
@@ -433,7 +433,7 @@ public class Etat implements Noeud {
 			else {
 				// si pion noir
 				if(	(0x2F & plateau.getCase(i)) == 32 && Piece.getCouleur(plateau.getCase(i)) == CouleurPiece.BLANC)  
-					total += 100;
+					total -= 100;
 			}
 		}
 
@@ -441,11 +441,8 @@ public class Etat implements Noeud {
 			evaluationBlancheValue = total;
 			evaluationBlancheCalculee = true;
 		}
-		else if(joueur == CouleurPiece.NOIR) {
-			evaluationNoireValue = total;
-			evaluationNoireCalculee = true;
-		}
-		return total;
+//		System.out.println(getFEN() + " : " + (total * (joueur == CouleurPiece.BLANC ? 1 : -1)));
+		return total * (joueur == CouleurPiece.BLANC ? 1 : -1);
 	}
 
 	

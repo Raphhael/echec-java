@@ -1,9 +1,10 @@
 package raphael.jeu.pieces;
 
+import java.util.List;
+
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
 import raphael.jeu.Coup.TypeCoup;
-import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
 import raphael.jeu.Plateau;
 
@@ -15,8 +16,7 @@ public class Roi extends Piece {
 		super(couleur);
 	}
 
-	public static ListeDeCoups listeCoups(Plateau plateau, int position,  int piece, boolean allerProfond) {
-		ListeDeCoups listeCoups = new ListeDeCoups();
+	public static List<Coup> listeCoups(Plateau plateau, int position,  int piece, boolean allerProfond, List<Coup> liste) {
 		CouleurPiece couleur = Piece.getCouleur(piece);
 		
 		for (int i = 0; i < DEPLACEMENTS.length; i++) {
@@ -24,7 +24,7 @@ public class Roi extends Piece {
 			
 			if((to != -1 && plateau.getCase(to) == 0)
 					|| (to != -1 && Piece.getCouleur(plateau.getCase(to)) != couleur) ) {
-				listeCoups.add(new Coup(position, to, TypeCoup.ROI_BOUGE));
+				liste.add(new Coup(position, to, TypeCoup.ROI_BOUGE));
 			}
 		}
 		
@@ -39,7 +39,7 @@ public class Roi extends Piece {
 						&& !plateau.estAttaquee(58, CouleurPiece.NOIR)
 						&& !plateau.estAttaquee(59, CouleurPiece.NOIR)
 						&& !plateau.estAttaquee(60, CouleurPiece.NOIR))
-					listeCoups.add(new Coup(60, 58, Coup.TypeCoup.ROQUE_GRAND_BLANC));
+					liste.add(new Coup(60, 58, Coup.TypeCoup.ROQUE_GRAND_BLANC));
 				/********** PETIT ROQUE BLANC ****************/
 				if(plateau.getEtat().isPetitRoqueBlanc()
 						&& plateau.getCase(61) == 0
@@ -48,7 +48,7 @@ public class Roi extends Piece {
 						&& !plateau.estAttaquee(61, CouleurPiece.NOIR)
 						&& !plateau.estAttaquee(62, CouleurPiece.NOIR)
 					)
-					listeCoups.add(new Coup(60, 62, Coup.TypeCoup.ROQUE_PETIT_BLANC));
+					liste.add(new Coup(60, 62, Coup.TypeCoup.ROQUE_PETIT_BLANC));
 				
 			}
 			else if(couleur == CouleurPiece.NOIR) {
@@ -61,7 +61,7 @@ public class Roi extends Piece {
 						&& !plateau.estAttaquee(2, CouleurPiece.BLANC)
 						&& !plateau.estAttaquee(3, CouleurPiece.BLANC)
 						&& !plateau.estAttaquee(4, CouleurPiece.BLANC))
-					listeCoups.add(new Coup(4, 2, Coup.TypeCoup.ROQUE_GRAND_NOIR));
+					liste.add(new Coup(4, 2, Coup.TypeCoup.ROQUE_GRAND_NOIR));
 				/********** PETIT ROQUE NOIR ****************/
 				if(plateau.getEtat().isPetitRoqueNoir()
 						&& plateau.getCase(5) == 0
@@ -69,11 +69,11 @@ public class Roi extends Piece {
 						&& !plateau.estAttaquee(6, CouleurPiece.BLANC)
 						&& !plateau.estAttaquee(5, CouleurPiece.BLANC)
 						&& !plateau.estAttaquee(4, CouleurPiece.BLANC))
-					listeCoups.add(new Coup(4, 6, Coup.TypeCoup.ROQUE_PETIT_NOIR));
+					liste.add(new Coup(4, 6, Coup.TypeCoup.ROQUE_PETIT_NOIR));
 			}
 		}
 		
-		return listeCoups;
+		return liste;
 	}
 
 	@Override

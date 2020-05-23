@@ -14,8 +14,8 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.FlowPane;
 import raphael.algo.AlphaBeta;
 import raphael.algo.AlphaBetaMemory;
-import raphael.algo.Constantes;
-import raphael.algo.IterativeDeepeningAlphaBeta;
+import raphael.algo.IterativeDeepening;
+import raphael.algo.IterativeDeepeningFixedTime;
 import raphael.algo.MTDf;
 import raphael.algo.MTDfFixedTime;
 import raphael.algo.Minimax;
@@ -30,30 +30,30 @@ public class IAPanel extends FlowPane {
 	public IAPanel(Board board) {
 		super(Orientation.VERTICAL);
 		getStyleClass().addAll("bordered");
-		
+
 		Label tempsMax = new Label("Temps d'execution maximum en secondes");
 		TextField tempsMaxIn = new TextField("10");
+		tempsExecution = new Label();
 
 		Button autoPlay = new Button("IA, Joue !");
 		autoPlay.getStyleClass().add("autoplay");
 		autoPlay.setOnAction((ActionEvent event) -> {
 			try {
-				Constantes.TIMEOUT_MILLIS = 1000 * Integer.parseInt(tempsMaxIn.getText());
-				setTempsExecution(board.autoPlay(algoChoisi, profondeur));
-			} catch(NumberFormatException e) {
+				tempsMaxIn.setText(String.valueOf(Algorithme.setExecutionTime(Integer.parseInt(tempsMaxIn.getText()))));
+				setTempsExecution(board.autoPlay(algoChoisi));
+			} catch (NumberFormatException e) {
 				tempsMaxIn.setText("Format de nombre invalide");
 			}
 		});
 
-		tempsExecution = new Label();
-
-		getChildren().addAll(ChoixGroupe.instance(), new ChoixProfondeur(), tempsMax, tempsMaxIn, autoPlay, tempsExecution);
+		getChildren().addAll(ChoixGroupe.instance(), new ChoixProfondeur(), tempsMax, tempsMaxIn, autoPlay,
+				tempsExecution);
 		setAlgoChoisi(ChoixGroupe.instance().getSelection());
 	}
 
 	/**
-	 * Classe comprise du groupe de boutons et du label permettant
-	 * de choisir la profondeur maximale.
+	 * Classe comprise du groupe de boutons et du label permettant de choisir la
+	 * profondeur maximale.
 	 */
 	private class ChoixProfondeur extends FlowPane {
 		public ChoixProfondeur() {
@@ -73,9 +73,6 @@ public class IAPanel extends FlowPane {
 		}
 	}
 
-
-
-	
 	/**
 	 * Boutons radios pour choisir l'algo
 	 */
@@ -90,11 +87,12 @@ public class IAPanel extends FlowPane {
 			listeAlgorithmes = new ArrayList<AlgoRadioButton>();
 
 			ajoutAlgo("MiniMax", Minimax.class, toggleGroup, true);
-			ajoutAlgo("Alpha-Bêta Memory", AlphaBetaMemory.class, toggleGroup);
 			ajoutAlgo("Alpha-Bêta", AlphaBeta.class, toggleGroup);
-			ajoutAlgo("Alpha-Bêta itératif", IterativeDeepeningAlphaBeta.class, toggleGroup);
+			ajoutAlgo("Alpha-Bêta Memory", AlphaBetaMemory.class, toggleGroup);
+			ajoutAlgo("Iterative Deepening profondeur", IterativeDeepening.class, toggleGroup);
+			ajoutAlgo("Iterative Deepening temps max", IterativeDeepeningFixedTime.class, toggleGroup);
 			ajoutAlgo("MTD-f profondeur", MTDf.class, toggleGroup);
-			ajoutAlgo("MTD-f temps", MTDfFixedTime.class, toggleGroup);
+			ajoutAlgo("MTD-f temps max", MTDfFixedTime.class, toggleGroup);
 
 			toggleGroup.selectedToggleProperty()
 					.addListener((ObservableValue<? extends Toggle> observable, Toggle o, Toggle n) -> {
@@ -109,21 +107,25 @@ public class IAPanel extends FlowPane {
 		private Algorithme getSelection() {
 			return SmallFactory.get((String) toggleGroup.getSelectedToggle().getUserData());
 		}
+
 		private List<AlgoRadioButton> getAlgorithmes() {
 			return listeAlgorithmes;
 		}
+
 		public static ChoixGroupe instance() {
-			if(instance == null)
+			if (instance == null)
 				instance = new ChoixGroupe();
 			return instance;
 		}
-		private void ajoutAlgo(String name, Class<? extends Algorithme> algo, ToggleGroup groupe ) {
+
+		private void ajoutAlgo(String name, Class<? extends Algorithme> algo, ToggleGroup groupe) {
 			ajoutAlgo(name, algo, groupe, false);
 		}
+
 		private void ajoutAlgo(String name, Class<? extends Algorithme> algo, ToggleGroup groupe, boolean selected) {
 			listeAlgorithmes.add(new AlgoRadioButton(name, algo, groupe, selected));
 		}
-		
+
 	}
 
 	/**
@@ -132,13 +134,13 @@ public class IAPanel extends FlowPane {
 	private static class SmallFactory {
 		public static Algorithme get(String algoName) {
 			Class<? extends Algorithme> classe = null;
-			for (AlgoRadioButton btn: ChoixGroupe.instance().getAlgorithmes())
-				if(btn.equals((Object) algoName))
+			for (AlgoRadioButton btn : ChoixGroupe.instance().getAlgorithmes())
+				if (btn.equals((Object) algoName))
 					classe = btn.getAlgo();
 
 			if (classe == null)
 				System.err.println("No algo found for " + algoName);
-			
+
 			try {
 				return classe.getConstructor().newInstance();
 			} catch (ReflectiveOperationException e) {
@@ -148,12 +150,12 @@ public class IAPanel extends FlowPane {
 	}
 
 	private void setProfondeur(int profondeur) {
-		this.profondeur = profondeur;
-		profondeurLabel.setText("Profondeur : " + profondeur + "  ");
+		this.profondeur = Algorithme.setProfondeurMax(profondeur);
+		profondeurLabel.setText("Profondeur : " + this.profondeur + "  ");
 	}
 
 	private void setTempsExecution(double temps) {
-		tempsExecution.setText("Exécuté en " + temps + " secondes.");
+		tempsExecution.setText(" Exécuté en " + temps + " secondes.");
 	}
 
 	private static void setAlgoChoisi(Algorithme algo) {

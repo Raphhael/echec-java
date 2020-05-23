@@ -94,7 +94,6 @@ public class Plateau {
 				zobristHash ^= zobristTable[i][Piece.getZobriestValue(cases[i])];
 			}
 		}
-		System.out.println("Code = " + zobristHash);
 	}
 	
 	
@@ -151,13 +150,13 @@ public class Plateau {
 			if(cases[i] == 0) 
 				continue;
 			
-			if(Piece.getCouleur(cases[i]) == couleur) {
-				List<Coup> listePiece = Piece.listeCoups(this, i, cases[i], goDeep);
-				
+			if(Piece.getCouleur(cases[i]) == couleur) {				
 				if(!goDeep) {
-					coups.addAll(listePiece);
+					Piece.listeCoups(this, i, cases[i], goDeep, coups);
 				}
 				else {
+					List<Coup> listePiece = new ListeDeCoups(7);
+					Piece.listeCoups(this, i, cases[i], goDeep, listePiece);
 					// Si le flag est activé, on fait une simulation du coup :
 					// On joue, et si on voit que ça marche on ajoute le coup
 					for (int j = 0, max = listePiece.size(); j < max; j++) {
@@ -210,9 +209,25 @@ public class Plateau {
 	 * @return				Le nombre d'attaques
 	 */
 	public int nbDAttaques(int indiceCase, CouleurPiece couleur) {
-		return 	  calculerCoups(couleur, false)
-				  .chercherCoupsTo(indiceCase)
+		if(indiceCase >= 64 || indiceCase < 0)
+			return -1;
+		int coups = calculerCoups(couleur, false)
+				  .chercherCoupsTo(indiceCase, this)
 				  .size();
+
+		if(couleur == CouleurPiece.NOIR && indiceCase > 9) {
+			if((0x2F & cases[indiceCase - 9]) == 32 && Piece.getCouleur(cases[indiceCase - 9]) == CouleurPiece.NOIR)
+				coups++;
+			if((0x2F & cases[indiceCase - 7]) == 32 && Piece.getCouleur(cases[indiceCase - 7]) == CouleurPiece.NOIR)
+				coups++;
+		}
+		if(couleur == CouleurPiece.BLANC && indiceCase < 55) {
+			if((0x2F & cases[indiceCase + 9]) == 32 && Piece.getCouleur(cases[indiceCase + 9]) == CouleurPiece.BLANC)
+				coups++;
+			if((0x2F & cases[indiceCase + 7]) == 32 && Piece.getCouleur(cases[indiceCase + 7]) == CouleurPiece.BLANC)
+				coups++;
+		}
+		return coups;
 	}
 
 	/**

@@ -9,12 +9,17 @@ import raphael.algo.structures.Noeud;
  */
 public class Minimax extends Algorithme {
 
-	public Noeud start(Noeud noeud, int profondeur) {
+	public Noeud start(Noeud noeud) {
 		Noeud meilleurNoeud = null;
+		int meilleurScore = Constantes.MOINS_INFINI;
 
-		for (Noeud fils : noeud.successeurs())
-			if(meilleurNoeud == null || miniMax(fils, profondeur - 1, false) > meilleurNoeud.evaluation(getJoueur()))
+		for (Noeud fils : noeud.successeurs()) {
+			int minimax = miniMax(fils, getProfondeurMax() - 1, false);
+			if(meilleurNoeud == null || minimax > meilleurScore) {
+				meilleurScore = minimax;
 				meilleurNoeud = fils;
+			}
+		}
 
 		return meilleurNoeud;
 	}
@@ -28,12 +33,10 @@ public class Minimax extends Algorithme {
 		
 		if(estMax)
 			for (Noeud fils : successeurs)
-				currentValue = Math.max(currentValue,
-										miniMax(fils, profondeur - 1, false));
+				currentValue = Math.max(currentValue,miniMax(fils, profondeur - 1, false));
 		else
 			for (Noeud fils : successeurs)
-				currentValue = Math.min(currentValue,
-										miniMax(fils, profondeur - 1, true));
+				currentValue = Math.min(currentValue, miniMax(fils, profondeur - 1, true));
 		
 		return currentValue;
 	}

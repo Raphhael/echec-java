@@ -10,6 +10,12 @@ public class ListeDeCoups extends ArrayList<Coup> implements List<Coup> {
 	
 	private ListeDeCoups dejaCalcule[] = new ListeDeCoups[64];
 
+	public ListeDeCoups() {
+		super(36);
+	}
+	public ListeDeCoups(int capacity) {
+		super(capacity);
+	}
 	/**
 	 * Chercher le nombre de coups commencant par un point
 	 * dans la liste courante.
@@ -40,7 +46,7 @@ public class ListeDeCoups extends ArrayList<Coup> implements List<Coup> {
 	 * @param	indice	L'indice d'arrivée des coups
 	 * @return			La liste des coups finissant par indice
 	 */
-	public ListeDeCoups chercherCoupsTo(int indice) {
+	public ListeDeCoups chercherCoupsTo(int indice, Plateau plateau) {
 		ListeDeCoups selection = dejaCalcule[indice];
 		if(selection != null) {
 			compteurTo++;
@@ -50,7 +56,7 @@ public class ListeDeCoups extends ArrayList<Coup> implements List<Coup> {
 		selection = new ListeDeCoups();
 		for (int i = 0; i < size(); i++) {
 			Coup coup = get(i);
-			if(coup.getTo() == indice)
+			if((0x2F & plateau.getCase(coup.getFrom())) != 32 && coup.getTo() == indice)
 				selection.add(coup);
 		}
 		

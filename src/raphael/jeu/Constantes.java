@@ -15,18 +15,18 @@ public interface Constantes {
 	/***************** Poids pour la fonctions d'évaluation ************/
 
 	// Plus il est élevé plus les pieces vont vers l'avant
-	float	COEF_AVANCEMENT_PIECES = 0.0005f;
+	float	COEF_AVANCEMENT_PIECES = 0.01f;
 
 	// Plus il est élevé plus on va maitriser le centre
-	int		COEF_CONTROLE_CENTRE = 10;
+	int		COEF_CONTROLE_CENTRE = 35;
 	
 	// Valeur du roque
-	int		COEF_ROQUER = 70;
+	int		COEF_ROQUER = 80;
 	float	COEF_EMPECHER_ROQUE_ENNEMI = 40; // pourcentage de _ROQUER
 
 	// Forcer la dame à ne pas bouger en début de partie
-	int		COEF_FORCER_DAME = 150;
-	int		COEF_FORCER_DAME_ENNEMIE_A_BOUGER = 100;
+	int		COEF_FORCER_DAME = 90;
+	int		COEF_FORCER_DAME_ENNEMIE_A_BOUGER = 30;
 	
 
 	public static final Random GENERATOR = new Random();

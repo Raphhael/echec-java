@@ -1,8 +1,9 @@
 package raphael.jeu.pieces;
+import java.util.List;
+
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
 import raphael.jeu.Coup.TypeCoup;
-import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
 import raphael.jeu.Plateau;
 import raphael.jeu.Utilitaire;
@@ -15,8 +16,7 @@ public class Tour extends Piece {
 		super(couleur);
 	}
 
-	public static ListeDeCoups listeCoups(Plateau plateau, int position,  int piece) {
-		ListeDeCoups liste = new ListeDeCoups();
+	public static List<Coup> listeCoups(Plateau plateau, int position,  int piece, List<Coup> liste) {
 		boolean aDejaBouge = getABouge(piece);
 
 		Coup.TypeCoup type = aDejaBouge ? TypeCoup.NORMAL : 

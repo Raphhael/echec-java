@@ -1,8 +1,9 @@
 package raphael.jeu.pieces;
 
+import java.util.List;
+
 import raphael.jeu.CouleurPiece;
 import raphael.jeu.Coup;
-import raphael.jeu.ListeDeCoups;
 import raphael.jeu.Piece;
 import raphael.jeu.Plateau;
 
@@ -15,8 +16,7 @@ public class Fou extends Piece {
 		super(couleur);
 	}
 	
-	public static ListeDeCoups listeCoups(Plateau plateau, int position, int piece) {
-		ListeDeCoups liste = new ListeDeCoups();
+	public static List<Coup> listeCoups(Plateau plateau, int position, int piece, List<Coup> liste) {
 				
 		for (int i = 0; i < DEPLACEMENTS.length; i++) {
 			boolean quitter = false;
